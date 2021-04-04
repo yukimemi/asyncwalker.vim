@@ -22,6 +22,7 @@ let filterEntries: string[] = [];
 let prevInput = "";
 let [winidDpswalk, bufnrDpswalk] = [0, 0];
 let [winidFilter, bufnrFilter] = [0, 0];
+let stop = false;
 
 start(async (vim) => {
   // debug.
@@ -61,28 +62,24 @@ start(async (vim) => {
     return await Promise.resolve([winid, bufnr]);
   };
 
-  async function* getFiles(dir: string, pattern: string[]) {
-    for await (const entry of walk(dir, {
-      includeDirs: false,
-      match: pattern.map((p) => new RegExp(p, "i")),
-      skip,
-    })) {
-      entries.push(entry.path);
-      yield entry.path;
-    }
-  }
   const update = async (bufnr: number, force: boolean): Promise<void> => {
     clog({ func: "update", bufnr, force });
+
+    const curbuf = (await vim.call("bufnr")) as number;
+    if (curbuf !== bufnrFilter) {
+      return;
+    }
 
     const input = (await vim.call("getline", 1)) as string;
     const re = new RegExp(input, "i");
 
     if (input === prevInput && !force) {
-      return await Promise.resolve();
+      return;
     }
 
     filterEntries = entries.filter((e) => re.test(e));
     clog({ func: "update", input, prevInput });
+    console.log(`[${filterEntries.length} / ${entries.length}]`);
     await vim.cmd(`call deletebufline(bufnr, 1, '$')`, { bufnr });
     await vim.cmd(`call setbufline(bufnr, "1", filterEntries)`, {
       bufnr,
@@ -90,7 +87,17 @@ start(async (vim) => {
     });
 
     prevInput = input;
-    return await Promise.resolve();
+  };
+
+  const close = async (): Promise<void> => {
+    if (bufnrDpswalk !== 0) {
+      await vim.execute(`bwipeout! ${bufnrDpswalk}`);
+    }
+    if (bufnrFilter !== 0) {
+      await vim.execute(`bwipeout! ${bufnrFilter}`);
+    }
+    [winidDpswalk, bufnrDpswalk] = [0, 0];
+    [winidFilter, bufnrFilter] = [0, 0];
   };
 
   const walkDir = async (pattern: string[], dir: string): Promise<unknown> => {
@@ -99,6 +106,7 @@ start(async (vim) => {
 
     entries = [];
     filterEntries = [];
+    stop = false;
 
     if (dir === "") {
       if (pattern.length < 2) {
@@ -122,12 +130,16 @@ start(async (vim) => {
 
     const prompt = "->";
 
-    if (bufnrDpswalk !== 0) {
-      await vim.execute(`bwipeout! ${bufnrDpswalk}`);
-    }
-    if (bufnrFilter !== 0) {
-      await vim.execute(`bwipeout! ${bufnrFilter}`);
-    }
+    await close();
+
+    await vim.autocmd("dpswalk-map", (helper) => {
+      helper.remove("*");
+      helper.define(
+        ["FileType"],
+        ["dpswalk", "dpswalk-filter"],
+        `call denops#request('${vim.name}', 'setMap', [])`
+      );
+    });
 
     [winidDpswalk, bufnrDpswalk] = await mkBuf(10, "dpswalk");
     [winidFilter, bufnrFilter] = await mkBuf(
@@ -160,31 +172,28 @@ start(async (vim) => {
       { promptId, promptName, bufnrFilter }
     );
     await vim.execute(`
+      inoremap <plug>(dps-walk-enter) <esc><cmd>call denops#request('${vim.name}', 'dpsEnter', [])<cr>
+      nnoremap <plug>(dps-walk-enter) <cmd>call denops#request('${vim.name}', 'dpsEnter', [])<cr>
+
+      inoremap <silent><buffer> <c-j> <esc><c-w>p:call cursor(line('.')+1,0)<cr><c-w>pA
+      inoremap <silent><buffer> <c-k> <esc><c-w>p:call cursor(line('.')-1,0)<cr><c-w>pA
+
       resize 1
       call cursor(line('$'), 0)
       startinsert!
     `);
-
-    const id = setInterval(async () => {
-      const input = ((await vim.call(
-        "getbufline",
-        bufnrFilter,
-        1
-      )) as string[])[0];
-      clog({ func: "setInterval", input, prevInput });
-      await update(bufnrDpswalk, true);
-    }, 100);
 
     for await (const entry of walk(dir, {
       includeDirs: false,
       match: p.map((x) => new RegExp(x, "i")),
       skip,
     })) {
+      if (stop) {
+        break;
+      }
       entries.push(entry.path);
-      console.log(`[${filterEntries.length} / ${entries.length}]`);
+      await update(bufnrDpswalk, true);
     }
-
-    clearInterval(id);
 
     return await Promise.resolve();
   };
@@ -211,6 +220,38 @@ start(async (vim) => {
 
       const bufnr = args[0] as number;
       return await update(bufnr, false);
+    },
+
+    async dpsEnter(..._args: unknown[]): Promise<unknown> {
+      stop = true;
+      const bufnr = (await vim.call("bufnr")) as number;
+      if (bufnr === bufnrFilter) {
+        await vim.execute(`quit`);
+      }
+
+      let line: string;
+      while (true) {
+        line = (await vim.call("getline", ".")) as string;
+        if (line !== "") {
+          break;
+        }
+      }
+      clog({ line, bufnrDpswalk });
+      await close();
+      await vim.execute(`
+        edit ${line}
+      `);
+      return;
+    },
+
+    async setMap(..._args: unknown[]): Promise<unknown> {
+      const bufname = (await vim.call(`bufname`)) as string;
+      clog({ func: "setMap", bufname });
+      await vim.execute(`
+        imap <buffer><silent> <cr> <plug>(dps-walk-enter)
+        nmap <buffer><silent> <cr> <plug>(dps-walk-enter)
+      `);
+      return;
     },
   });
 
