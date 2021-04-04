@@ -136,8 +136,13 @@ start(async (vim) => {
       helper.remove("*");
       helper.define(
         ["FileType"],
-        ["dpswalk", "dpswalk-filter"],
-        `call denops#request('${vim.name}', 'setMap', [])`
+        "dpswalk",
+        `call denops#request('${vim.name}', 'setMapWalk', [])`
+      );
+      helper.define(
+        ["FileType"],
+        "dpswalk-filter",
+        `call denops#request('${vim.name}', 'setMapFilter', [])`
       );
     });
 
@@ -174,9 +179,7 @@ start(async (vim) => {
     await vim.execute(`
       inoremap <plug>(dps-walk-enter) <esc><cmd>call denops#request('${vim.name}', 'dpsEnter', [])<cr>
       nnoremap <plug>(dps-walk-enter) <cmd>call denops#request('${vim.name}', 'dpsEnter', [])<cr>
-
-      inoremap <silent><buffer> <c-j> <esc><c-w>p:call cursor(line('.')+1,0)<cr><c-w>pA
-      inoremap <silent><buffer> <c-k> <esc><c-w>p:call cursor(line('.')-1,0)<cr><c-w>pA
+      nnoremap <plug>(dps-walk-quit) <cmd>call denops#request('${vim.name}', 'dpsQuit', [])<cr>
 
       resize 1
       call cursor(line('$'), 0)
@@ -244,12 +247,36 @@ start(async (vim) => {
       return;
     },
 
-    async setMap(..._args: unknown[]): Promise<unknown> {
+    async dpsQuit(..._args: unknown[]): Promise<unknown> {
+      stop = true;
+      await close();
+      return;
+    },
+
+    async setMapWalk(..._args: unknown[]): Promise<unknown> {
       const bufname = (await vim.call(`bufname`)) as string;
-      clog({ func: "setMap", bufname });
+      clog({ func: "setMapWalk", bufname });
       await vim.execute(`
-        imap <buffer><silent> <cr> <plug>(dps-walk-enter)
-        nmap <buffer><silent> <cr> <plug>(dps-walk-enter)
+        imap <silent><buffer> <cr> <plug>(dps-walk-enter)
+        nmap <silent><buffer> <cr> <plug>(dps-walk-enter)
+        nmap <silent><buffer><nowait> <esc> <plug>(dps-walk-quit)
+
+        nnoremap <silent><buffer><nowait> i <esc><c-w>pA
+        nnoremap <silent><buffer><nowait> a <esc><c-w>pA
+      `);
+      return;
+    },
+    async setMapFilter(..._args: unknown[]): Promise<unknown> {
+      const bufname = (await vim.call(`bufname`)) as string;
+      clog({ func: "setMapFilter", bufname });
+      await vim.execute(`
+        imap <silent><buffer> <cr> <plug>(dps-walk-enter)
+        nmap <silent><buffer> <cr> <plug>(dps-walk-enter)
+
+        inoremap <silent><buffer><nowait> <esc> <esc><c-w>p
+        inoremap <silent><buffer> <c-j> <esc><c-w>p:call cursor(line('.')+1,0)<cr><c-w>pA
+        inoremap <silent><buffer> <c-k> <esc><c-w>p:call cursor(line('.')-1,0)<cr><c-w>pA
+
       `);
       return;
     },
