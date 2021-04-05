@@ -1,5 +1,6 @@
 import * as _ from "https://cdn.skypack.dev/lodash@4.17.21";
 import { isAbsolute, join } from "https://deno.land/std@0.92.0/path/mod.ts";
+import { parse } from "https://deno.land/std@0.92.0/flags/mod.ts";
 import { start } from "https://deno.land/x/denops_std@v0.4/mod.ts";
 import { walk } from "https://deno.land/std@0.92.0/fs/mod.ts";
 
@@ -35,9 +36,9 @@ start(async (vim) => {
 
   const mkBuf = async (
     height: number,
-    bufname: string,
-    signcolumn = 1
+    bufname: string
   ): Promise<[number, number]> => {
+    clog({ height, bufname });
     await vim.execute(`
       botright ${height}split ${bufname}
       setlocal filetype=${bufname}
@@ -54,7 +55,7 @@ start(async (vim) => {
       setlocal nospell
       setlocal noswapfile
       setlocal nowrap
-      setlocal signcolumn=yes:${signcolumn}
+      setlocal signcolumn=auto
       setlocal winfixheight
     `);
     const winid = (await vim.call("winnr")) as number;
@@ -70,7 +71,11 @@ start(async (vim) => {
       return;
     }
 
-    const input = (await vim.call("getline", 1)) as string;
+    const input = ((await vim.call(
+      "getbufline",
+      bufnrFilter,
+      1
+    )) as string[])[0];
     const re = new RegExp(input, "i");
 
     if (input === prevInput && !force) {
@@ -100,33 +105,34 @@ start(async (vim) => {
     [winidFilter, bufnrFilter] = [0, 0];
   };
 
-  const walkDir = async (pattern: string[], dir: string): Promise<unknown> => {
-    clog({ pattern, dir });
+  await vim.execute(`
+    inoremap <plug>(dps-walk-enter) <esc><cmd>call denops#request('${vim.name}', 'dpsEnter', [])<cr>
+    nnoremap <plug>(dps-walk-enter) <cmd>call denops#request('${vim.name}', 'dpsEnter', [])<cr>
+    nnoremap <plug>(dps-walk-quit) <cmd>call denops#request('${vim.name}', 'dpsQuit', [])<cr>
+  `);
+
+  const walkDir = async (args: string[]): Promise<unknown> => {
+    clog({ args });
     const cwd = (await vim.call("getcwd")) as string;
 
     entries = [];
     filterEntries = [];
     stop = false;
 
-    if (dir === "") {
-      if (pattern.length < 2) {
-        dir = cwd;
-      } else {
-        dir = pattern[pattern.length - 1];
-        pattern = pattern.slice(0, pattern.length - 1);
-      }
-    }
-
-    const p =
-      pattern.length !== 0
-        ? pattern
+    const a = parse(args);
+    const pattern =
+      a._.length > 0
+        ? (a._ as string[])
         : [(await vim.call("input", "Search for pattern: ")) as string];
+
+    let dir = a.path ?? cwd;
+    dir = await vim.call("expand", dir);
 
     if (!isAbsolute(dir)) {
       dir = join(cwd, dir);
     }
 
-    clog({ p, dir });
+    clog({ pattern, dir });
 
     const prompt = "->";
 
@@ -147,11 +153,12 @@ start(async (vim) => {
     });
 
     [winidDpswalk, bufnrDpswalk] = await mkBuf(10, "dpswalk");
-    [winidFilter, bufnrFilter] = await mkBuf(
-      1,
-      "dpswalk-filter",
-      prompt.length
-    );
+    [winidFilter, bufnrFilter] = await mkBuf(1, "dpswalk-filter");
+    await vim.execute(`
+      resize 1
+      call cursor(line('$'), 0)
+      startinsert!
+    `);
 
     await vim.autocmd("dpswalk", (helper) => {
       helper.remove("*", "<buffer>");
@@ -176,19 +183,9 @@ start(async (vim) => {
       `call sign_place(promptId, "", promptName, bufnrFilter, {"lnum": line('$')})`,
       { promptId, promptName, bufnrFilter }
     );
-    await vim.execute(`
-      inoremap <plug>(dps-walk-enter) <esc><cmd>call denops#request('${vim.name}', 'dpsEnter', [])<cr>
-      nnoremap <plug>(dps-walk-enter) <cmd>call denops#request('${vim.name}', 'dpsEnter', [])<cr>
-      nnoremap <plug>(dps-walk-quit) <cmd>call denops#request('${vim.name}', 'dpsQuit', [])<cr>
-
-      resize 1
-      call cursor(line('$'), 0)
-      startinsert!
-    `);
-
     for await (const entry of walk(dir, {
       includeDirs: false,
-      match: p.map((x) => new RegExp(x, "i")),
+      match: pattern.map((x) => new RegExp(x, "i")),
       skip,
     })) {
       if (stop) {
@@ -205,7 +202,7 @@ start(async (vim) => {
     async run(...args: unknown[]): Promise<unknown> {
       clog({ args });
 
-      return await walkDir(args as string[], "");
+      return await walkDir(args as string[]);
     },
 
     async runBufferDir(...args: unknown[]): Promise<unknown> {
@@ -215,7 +212,9 @@ start(async (vim) => {
       const bufdir = (await vim.call("fnamemodify", bufname, ":h")) as string;
       clog({ bufdir });
 
-      return await walkDir(args as string[], bufdir);
+      args.push(`--path=${bufdir}`);
+
+      return await walkDir(args as string[]);
     },
 
     async filterUpdate(...args: unknown[]): Promise<unknown> {
@@ -276,7 +275,6 @@ start(async (vim) => {
         inoremap <silent><buffer><nowait> <esc> <esc><c-w>p
         inoremap <silent><buffer> <c-j> <esc><c-w>p:call cursor(line('.')+1,0)<cr><c-w>pA
         inoremap <silent><buffer> <c-k> <esc><c-w>p:call cursor(line('.')-1,0)<cr><c-w>pA
-
       `);
       return;
     },
