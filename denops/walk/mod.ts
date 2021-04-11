@@ -1,22 +1,8 @@
 import * as _ from "https://cdn.skypack.dev/lodash@4.17.21";
 import { isAbsolute, join } from "https://deno.land/std@0.92.0/path/mod.ts";
 import { parse } from "https://deno.land/std@0.92.0/flags/mod.ts";
-import { start } from "https://deno.land/x/denops_std@v0.4/mod.ts";
+import { start } from "https://deno.land/x/denops_std@v0.7/mod.ts";
 import { walk } from "https://deno.land/std@0.92.0/fs/mod.ts";
-
-const skip = [
-  /\.git/,
-  /\.svn/,
-  /\.hg/,
-  /\.o$/,
-  /\.obj$/,
-  /\.a$/,
-  /\.exe~?$/,
-  /tags$/,
-  /node_modules/,
-  /target\/release/,
-  /target\/debug/,
-];
 
 let entries: string[] = [];
 let filterEntries: string[] = [];
@@ -33,6 +19,21 @@ start(async (vim) => {
       console.log(...data);
     }
   };
+  const bufsize = (await vim.g.get("walk_bufsize", 500)) as number;
+  const skips = (await vim.g.get("walk_skips", [
+    "\\.git",
+    "\\.svn",
+    "\\.hg",
+    "\\.o$",
+    "\\.obj$",
+    "\\.a$",
+    "\\.exe~?$",
+    "tags$",
+  ])) as string[];
+
+  clog({ debug });
+  clog({ bufsize });
+  clog({ skips });
 
   const mkBuf = async (
     height: number,
@@ -45,8 +46,11 @@ start(async (vim) => {
       setlocal bufhidden=hide
       setlocal buftype=nofile
       setlocal colorcolumn=
+      setlocal concealcursor=inv
+      setlocal conceallevel=3
       setlocal foldcolumn=0
       setlocal nobuflisted
+      setlocal nocursorcolumn
       setlocal nofoldenable
       setlocal nolist
       setlocal nomodeline
@@ -55,7 +59,7 @@ start(async (vim) => {
       setlocal nospell
       setlocal noswapfile
       setlocal nowrap
-      setlocal signcolumn=auto
+      setlocal signcolumn=yes
       setlocal winfixheight
     `);
     const winid = (await vim.call("winnr")) as number;
@@ -111,7 +115,7 @@ start(async (vim) => {
     nnoremap <plug>(dps-walk-quit) <cmd>call denops#request('${vim.name}', 'dpsQuit', [])<cr>
   `);
 
-  const walkDir = async (args: string[]): Promise<unknown> => {
+  const walkDir = async (args: string[]): Promise<void> => {
     clog({ args });
     const cwd = (await vim.call("getcwd")) as string;
 
@@ -153,11 +157,13 @@ start(async (vim) => {
     });
 
     [winidDpswalk, bufnrDpswalk] = await mkBuf(10, "dpswalk");
+    await vim.execute(`silent doautocmd FileType dpswalk`);
+
     [winidFilter, bufnrFilter] = await mkBuf(1, "dpswalk-filter");
     await vim.execute(`
+      silent doautocmd FileType dpswalk-filter
       resize 1
       call cursor(line('$'), 0)
-      startinsert!
     `);
 
     await vim.autocmd("dpswalk", (helper) => {
@@ -183,29 +189,33 @@ start(async (vim) => {
       `call sign_place(promptId, "", promptName, bufnrFilter, {"lnum": line('$')})`,
       { promptId, promptName, bufnrFilter }
     );
+
+    let cnt = 0;
     for await (const entry of walk(dir, {
       includeDirs: false,
       match: pattern.map((x) => new RegExp(x, "i")),
-      skip,
+      skip: skips.map((x) => new RegExp(x, "i")),
     })) {
       if (stop) {
         break;
       }
       entries.push(entry.path);
-      await update(bufnrDpswalk, true);
+      cnt++;
+      if (cnt % bufsize === 0) {
+        await update(bufnrDpswalk, true);
+      }
     }
-
-    return await Promise.resolve();
+    await update(bufnrDpswalk, true);
   };
 
   vim.register({
-    async run(...args: unknown[]): Promise<unknown> {
+    async run(...args: unknown[]): Promise<void> {
       clog({ args });
 
-      return await walkDir(args as string[]);
+      await walkDir(args as string[]);
     },
 
-    async runBufferDir(...args: unknown[]): Promise<unknown> {
+    async runBufferDir(...args: unknown[]): Promise<void> {
       clog({ args });
 
       const bufname = (await vim.call("bufname")) as string;
@@ -214,17 +224,17 @@ start(async (vim) => {
 
       args.push(`--path=${bufdir}`);
 
-      return await walkDir(args as string[]);
+      await walkDir(args as string[]);
     },
 
-    async filterUpdate(...args: unknown[]): Promise<unknown> {
+    async filterUpdate(...args: unknown[]): Promise<void> {
       clog({ func: "filterUpdate", args });
 
       const bufnr = args[0] as number;
-      return await update(bufnr, false);
+      await update(bufnr, false);
     },
 
-    async dpsEnter(..._args: unknown[]): Promise<unknown> {
+    async dpsEnter(..._args: unknown[]): Promise<void> {
       stop = true;
       const bufnr = (await vim.call("bufnr")) as number;
       if (bufnr === bufnrFilter) {
@@ -243,16 +253,14 @@ start(async (vim) => {
       await vim.execute(`
         edit ${line}
       `);
-      return;
     },
 
-    async dpsQuit(..._args: unknown[]): Promise<unknown> {
+    async dpsQuit(..._args: unknown[]): Promise<void> {
       stop = true;
       await close();
-      return;
     },
 
-    async setMapWalk(..._args: unknown[]): Promise<unknown> {
+    async setMapWalk(..._args: unknown[]): Promise<void> {
       const bufname = (await vim.call(`bufname`)) as string;
       clog({ func: "setMapWalk", bufname });
       await vim.execute(`
@@ -263,9 +271,8 @@ start(async (vim) => {
         nnoremap <silent><buffer><nowait> i <esc><c-w>pA
         nnoremap <silent><buffer><nowait> a <esc><c-w>pA
       `);
-      return;
     },
-    async setMapFilter(..._args: unknown[]): Promise<unknown> {
+    async setMapFilter(..._args: unknown[]): Promise<void> {
       const bufname = (await vim.call(`bufname`)) as string;
       clog({ func: "setMapFilter", bufname });
       await vim.execute(`
@@ -275,8 +282,9 @@ start(async (vim) => {
         inoremap <silent><buffer><nowait> <esc> <esc><c-w>p
         inoremap <silent><buffer> <c-j> <esc><c-w>p:call cursor(line('.')+1,0)<cr><c-w>pA
         inoremap <silent><buffer> <c-k> <esc><c-w>p:call cursor(line('.')-1,0)<cr><c-w>pA
+
+        startinsert!
       `);
-      return;
     },
   });
 
