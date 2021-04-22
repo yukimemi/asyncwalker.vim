@@ -1,7 +1,7 @@
 import * as _ from "https://cdn.skypack.dev/lodash@4.17.21";
 import { isAbsolute, join } from "https://deno.land/std@0.92.0/path/mod.ts";
 import { parse } from "https://deno.land/std@0.92.0/flags/mod.ts";
-import { start } from "https://deno.land/x/denops_std@v0.7/mod.ts";
+import { main } from "https://deno.land/x/denops_std@v0.8/mod.ts";
 import { walk } from "https://deno.land/std@0.92.0/fs/mod.ts";
 
 let entries: string[] = [];
@@ -11,7 +11,7 @@ let [winidDpswalk, bufnrDpswalk] = [0, 0];
 let [winidFilter, bufnrFilter] = [0, 0];
 let stop = false;
 
-start(async (vim) => {
+main(async ({ vim }) => {
   // debug.
   const debug = await vim.g.get("walk_debug", false);
   const clog = (...data: any[]): void => {
