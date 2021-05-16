@@ -3,10 +3,11 @@
   "deno.enable": true,
   "deno.lint": true,
   "coc.source.file.trimSameExts": [],
-  "prettier.disableLanguage": [
+  "prettier.disableLanguages": [
     "javascript",
     "javascriptreact",
     "typescript",
     "typescriptreact"
   ]
 }
+

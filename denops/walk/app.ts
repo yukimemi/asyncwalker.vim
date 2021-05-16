@@ -37,11 +37,11 @@ main(async ({ vim }) => {
 
   const mkBuf = async (
     height: number,
-    bufname: string
+    bufname: string,
   ): Promise<[number, number]> => {
     clog({ height, bufname });
     await vim.execute(`
-      botright ${height}split ${bufname}
+      botright ${height}new ${bufname}
       setlocal filetype=${bufname}
       setlocal bufhidden=hide
       setlocal buftype=nofile
@@ -78,7 +78,7 @@ main(async ({ vim }) => {
     const input = ((await vim.call(
       "getbufline",
       bufnrFilter,
-      1
+      1,
     )) as string[])[0];
     const re = new RegExp(input, "i");
 
@@ -124,10 +124,9 @@ main(async ({ vim }) => {
     stop = false;
 
     const a = parse(args);
-    const pattern =
-      a._.length > 0
-        ? (a._ as string[])
-        : [(await vim.call("input", "Search for pattern: ")) as string];
+    const pattern = a._.length > 0
+      ? (a._ as string[])
+      : [(await vim.call("input", "Search for pattern: ")) as string];
 
     let dir = a.path ?? cwd;
     dir = await vim.call("expand", dir);
@@ -147,12 +146,12 @@ main(async ({ vim }) => {
       helper.define(
         ["FileType"],
         "dpswalk",
-        `call denops#request('${vim.name}', 'setMapWalk', [])`
+        `call denops#request('${vim.name}', 'setMapWalk', [])`,
       );
       helper.define(
         ["FileType"],
         "dpswalk-filter",
-        `call denops#request('${vim.name}', 'setMapFilter', [])`
+        `call denops#request('${vim.name}', 'setMapFilter', [])`,
       );
     });
 
@@ -165,13 +164,18 @@ main(async ({ vim }) => {
       resize 1
       call cursor(line('$'), 0)
     `);
+    if (await vim.call("has", "nvim") as boolean) {
+      await vim.execute(`startinsert!`);
+    } else {
+      await vim.execute(`call feedkeys("a")`);
+    }
 
     await vim.autocmd("dpswalk", (helper) => {
       helper.remove("*", "<buffer>");
       helper.define(
         ["TextChanged", "TextChangedI", "TextChangedP"],
         "<buffer>",
-        `call denops#notify('${vim.name}', 'filterUpdate', [${bufnrDpswalk}])`
+        `call denops#notify('${vim.name}', 'filterUpdate', [${bufnrDpswalk}])`,
       );
     });
 
@@ -179,23 +183,25 @@ main(async ({ vim }) => {
     const promptId = 2000;
     await vim.cmd(
       `call sign_define(promptName, {"text": prompt, "texthl": "Error"})`,
-      { prompt, promptName }
+      { prompt, promptName },
     );
     await vim.cmd(
       `call sign_unplace("", {"id": promptId, "buffer": bufnrFilter})`,
-      { promptId, bufnrFilter }
+      { promptId, bufnrFilter },
     );
     await vim.cmd(
       `call sign_place(promptId, "", promptName, bufnrFilter, {"lnum": line('$')})`,
-      { promptId, promptName, bufnrFilter }
+      { promptId, promptName, bufnrFilter },
     );
 
     let cnt = 0;
-    for await (const entry of walk(dir, {
-      includeDirs: false,
-      match: pattern.map((x) => new RegExp(x, "i")),
-      skip: skips.map((x) => new RegExp(x, "i")),
-    })) {
+    for await (
+      const entry of walk(dir, {
+        includeDirs: false,
+        match: pattern.map((x) => new RegExp(x, "i")),
+        skip: skips.map((x) => new RegExp(x, "i")),
+      })
+    ) {
       if (stop) {
         break;
       }
@@ -282,8 +288,6 @@ main(async ({ vim }) => {
         inoremap <silent><buffer><nowait> <esc> <esc><c-w>p
         inoremap <silent><buffer> <c-j> <esc><c-w>p:call cursor(line('.')+1,0)<cr><c-w>pA
         inoremap <silent><buffer> <c-k> <esc><c-w>p:call cursor(line('.')-1,0)<cr><c-w>pA
-
-        startinsert!
       `);
     },
   });
