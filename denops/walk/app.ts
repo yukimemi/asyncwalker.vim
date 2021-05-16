@@ -137,7 +137,7 @@ main(async ({ vim }) => {
 
     clog({ pattern, dir });
 
-    const prompt = "->";
+    const prompt = ">";
 
     await close();
 
