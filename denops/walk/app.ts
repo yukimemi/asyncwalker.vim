@@ -164,7 +164,7 @@ main(async ({ vim }) => {
       resize 1
       call cursor(line('$'), 0)
     `);
-    if (await vim.call("has", "nvim") as boolean) {
+    if ((await vim.call("has", "nvim")) as boolean) {
       await vim.execute(`startinsert!`);
     } else {
       await vim.execute(`call feedkeys("a")`);
