@@ -1,8 +1,5 @@
-import * as _ from "https://cdn.skypack.dev/lodash@4.17.21";
-import { isAbsolute, join } from "https://deno.land/std@0.92.0/path/mod.ts";
-import { parse } from "https://deno.land/std@0.92.0/flags/mod.ts";
-import { main } from "https://deno.land/x/denops_std@v0.8/mod.ts";
-import { walk } from "https://deno.land/std@0.92.0/fs/mod.ts";
+import { _, flags, fs, path } from "./deps.ts";
+import { main } from "./deps.ts";
 
 let entries: string[] = [];
 let filterEntries: string[] = [];
@@ -123,7 +120,7 @@ main(async ({ vim }) => {
     filterEntries = [];
     stop = false;
 
-    const a = parse(args);
+    const a = flags.parse(args);
     const pattern = a._.length > 0
       ? (a._ as string[])
       : [(await vim.call("input", "Search for pattern: ")) as string];
@@ -131,8 +128,8 @@ main(async ({ vim }) => {
     let dir = a.path ?? cwd;
     dir = await vim.call("expand", dir);
 
-    if (!isAbsolute(dir)) {
-      dir = join(cwd, dir);
+    if (!path.isAbsolute(dir)) {
+      dir = path.join(cwd, dir);
     }
 
     clog({ pattern, dir });
@@ -196,7 +193,7 @@ main(async ({ vim }) => {
 
     let cnt = 0;
     for await (
-      const entry of walk(dir, {
+      const entry of fs.walk(dir, {
         includeDirs: false,
         match: pattern.map((x) => new RegExp(x, "i")),
         skip: skips.map((x) => new RegExp(x, "i")),
