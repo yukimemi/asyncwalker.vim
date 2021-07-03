@@ -1,23 +1,22 @@
-import { _, flags, fs, path } from "./deps.ts";
-import { main } from "./deps.ts";
+import { _, autocmd, Denops, execute, flags, fs, path, vars } from "./deps.ts";
 
 let entries: string[] = [];
 let filterEntries: string[] = [];
 let prevInput = "";
-let [winidDpswalk, bufnrDpswalk] = [0, 0];
-let [winidFilter, bufnrFilter] = [0, 0];
+let bufnrDpswalk = 0;
+let bufnrFilter = 0;
 let stop = false;
 
-main(async ({ vim }) => {
+export async function main(denops: Denops): Promise<void> {
   // debug.
-  const debug = await vim.g.get("walk_debug", false);
+  const debug = await vars.g.get(denops, "walk_debug", false);
   const clog = (...data: any[]): void => {
     if (debug) {
       console.log(...data);
     }
   };
-  const bufsize = (await vim.g.get("walk_bufsize", 500)) as number;
-  const skips = (await vim.g.get("walk_skips", [
+  const bufsize = (await vars.g.get(denops, "walk_bufsize", 500)) as number;
+  const skips = (await vars.g.get(denops, "walk_skips", [
     "\\.git",
     "\\.svn",
     "\\.hg",
@@ -35,9 +34,11 @@ main(async ({ vim }) => {
   const mkBuf = async (
     height: number,
     bufname: string,
-  ): Promise<[number, number]> => {
+  ): Promise<number> => {
     clog({ height, bufname });
-    await vim.execute(`
+    await execute(
+      denops,
+      `
       botright ${height}new ${bufname}
       setlocal filetype=${bufname}
       setlocal bufhidden=hide
@@ -58,21 +59,21 @@ main(async ({ vim }) => {
       setlocal nowrap
       setlocal signcolumn=yes
       setlocal winfixheight
-    `);
-    const winid = (await vim.call("winnr")) as number;
-    const bufnr = (await vim.call("bufnr")) as number;
-    return await Promise.resolve([winid, bufnr]);
+    `,
+    );
+    const bufnr = (await denops.call("bufnr")) as number;
+    return await Promise.resolve(bufnr);
   };
 
   const update = async (bufnr: number, force: boolean): Promise<void> => {
     clog({ func: "update", bufnr, force });
 
-    const curbuf = (await vim.call("bufnr")) as number;
+    const curbuf = (await denops.call("bufnr")) as number;
     if (curbuf !== bufnrFilter) {
       return;
     }
 
-    const input = ((await vim.call(
+    const input = ((await denops.call(
       "getbufline",
       bufnrFilter,
       1,
@@ -86,8 +87,8 @@ main(async ({ vim }) => {
     filterEntries = entries.filter((e) => re.test(e));
     clog({ func: "update", input, prevInput });
     console.log(`[${filterEntries.length} / ${entries.length}]`);
-    await vim.cmd(`call deletebufline(bufnr, 1, '$')`, { bufnr });
-    await vim.cmd(`call setbufline(bufnr, "1", filterEntries)`, {
+    await denops.cmd(`call deletebufline(bufnr, 1, '$')`, { bufnr });
+    await denops.cmd(`call setbufline(bufnr, "1", filterEntries)`, {
       bufnr,
       filterEntries,
     });
@@ -97,24 +98,27 @@ main(async ({ vim }) => {
 
   const close = async (): Promise<void> => {
     if (bufnrDpswalk !== 0) {
-      await vim.execute(`bwipeout! ${bufnrDpswalk}`);
+      await denops.cmd(`bwipeout! ${bufnrDpswalk}`);
     }
     if (bufnrFilter !== 0) {
-      await vim.execute(`bwipeout! ${bufnrFilter}`);
+      await denops.cmd(`bwipeout! ${bufnrFilter}`);
     }
-    [winidDpswalk, bufnrDpswalk] = [0, 0];
-    [winidFilter, bufnrFilter] = [0, 0];
+    bufnrDpswalk = 0;
+    bufnrFilter = 0;
   };
 
-  await vim.execute(`
-    inoremap <plug>(dps-walk-enter) <esc><cmd>call denops#request('${vim.name}', 'dpsEnter', [])<cr>
-    nnoremap <plug>(dps-walk-enter) <cmd>call denops#request('${vim.name}', 'dpsEnter', [])<cr>
-    nnoremap <plug>(dps-walk-quit) <cmd>call denops#request('${vim.name}', 'dpsQuit', [])<cr>
-  `);
+  await execute(
+    denops,
+    `
+    inoremap <plug>(dps-walk-enter) <esc><cmd>call denops#request('${denops.name}', 'dpsEnter', [])<cr>
+    nnoremap <plug>(dps-walk-enter) <cmd>call denops#request('${denops.name}', 'dpsEnter', [])<cr>
+    nnoremap <plug>(dps-walk-quit) <cmd>call denops#request('${denops.name}', 'dpsQuit', [])<cr>
+  `,
+  );
 
   const walkDir = async (args: string[]): Promise<void> => {
     clog({ args });
-    const cwd = (await vim.call("getcwd")) as string;
+    const cwd = (await denops.call("getcwd")) as string;
 
     entries = [];
     filterEntries = [];
@@ -123,10 +127,10 @@ main(async ({ vim }) => {
     const a = flags.parse(args);
     const pattern = a._.length > 0
       ? (a._ as string[])
-      : [(await vim.call("input", "Search for pattern: ")) as string];
+      : [(await denops.call("input", "Search for pattern: ")) as string];
 
     let dir = a.path ?? cwd;
-    dir = await vim.call("expand", dir);
+    dir = await denops.call("expand", dir);
 
     if (!path.isAbsolute(dir)) {
       dir = path.join(cwd, dir);
@@ -138,55 +142,58 @@ main(async ({ vim }) => {
 
     await close();
 
-    await vim.autocmd("dpswalk-map", (helper) => {
+    await autocmd.group(denops, "dpswalk-map", (helper) => {
       helper.remove("*");
       helper.define(
-        ["FileType"],
+        "FileType",
         "dpswalk",
-        `call denops#request('${vim.name}', 'setMapWalk', [])`,
+        `call denops#request('${denops.name}', 'setMapWalk', [])`,
       );
       helper.define(
-        ["FileType"],
+        "FileType",
         "dpswalk-filter",
-        `call denops#request('${vim.name}', 'setMapFilter', [])`,
+        `call denops#request('${denops.name}', 'setMapFilter', [])`,
       );
     });
 
-    [winidDpswalk, bufnrDpswalk] = await mkBuf(10, "dpswalk");
-    await vim.execute(`silent doautocmd FileType dpswalk`);
+    bufnrDpswalk = await mkBuf(10, "dpswalk");
+    await denops.cmd(`silent doautocmd FileType dpswalk`);
 
-    [winidFilter, bufnrFilter] = await mkBuf(1, "dpswalk-filter");
-    await vim.execute(`
+    bufnrFilter = await mkBuf(1, "dpswalk-filter");
+    await execute(
+      denops,
+      `
       silent doautocmd FileType dpswalk-filter
       resize 1
       call cursor(line('$'), 0)
-    `);
-    if ((await vim.call("has", "nvim")) as boolean) {
-      await vim.execute(`startinsert!`);
+    `,
+    );
+    if ((await denops.call("has", "nvim")) as boolean) {
+      await denops.cmd(`startinsert!`);
     } else {
-      await vim.execute(`call feedkeys("a")`);
+      await denops.cmd(`call feedkeys("a")`);
     }
 
-    await vim.autocmd("dpswalk", (helper) => {
+    await autocmd.group(denops, "dpswalk", (helper) => {
       helper.remove("*", "<buffer>");
       helper.define(
         ["TextChanged", "TextChangedI", "TextChangedP"],
         "<buffer>",
-        `call denops#notify('${vim.name}', 'filterUpdate', [${bufnrDpswalk}])`,
+        `call denops#notify('${denops.name}', 'filterUpdate', [${bufnrDpswalk}])`,
       );
     });
 
     const promptName = "dpswalk_filter_prompt";
     const promptId = 2000;
-    await vim.cmd(
+    await denops.cmd(
       `call sign_define(promptName, {"text": prompt, "texthl": "Error"})`,
       { prompt, promptName },
     );
-    await vim.cmd(
+    await denops.cmd(
       `call sign_unplace("", {"id": promptId, "buffer": bufnrFilter})`,
       { promptId, bufnrFilter },
     );
-    await vim.cmd(
+    await denops.cmd(
       `call sign_place(promptId, "", promptName, bufnrFilter, {"lnum": line('$')})`,
       { promptId, promptName, bufnrFilter },
     );
@@ -211,7 +218,7 @@ main(async ({ vim }) => {
     await update(bufnrDpswalk, true);
   };
 
-  vim.register({
+  denops.dispatcher = {
     async run(...args: unknown[]): Promise<void> {
       clog({ args });
 
@@ -221,8 +228,9 @@ main(async ({ vim }) => {
     async runBufferDir(...args: unknown[]): Promise<void> {
       clog({ args });
 
-      const bufname = (await vim.call("bufname")) as string;
-      const bufdir = (await vim.call("fnamemodify", bufname, ":h")) as string;
+      const bufname = (await denops.call("bufname")) as string;
+      const bufdir =
+        (await denops.call("fnamemodify", bufname, ":h")) as string;
       clog({ bufdir });
 
       args.push(`--path=${bufdir}`);
@@ -239,23 +247,21 @@ main(async ({ vim }) => {
 
     async dpsEnter(..._args: unknown[]): Promise<void> {
       stop = true;
-      const bufnr = (await vim.call("bufnr")) as number;
+      const bufnr = (await denops.call("bufnr")) as number;
       if (bufnr === bufnrFilter) {
-        await vim.execute(`quit`);
+        await denops.cmd(`quit`);
       }
 
       let line: string;
       while (true) {
-        line = (await vim.call("getline", ".")) as string;
+        line = (await denops.call("getline", ".")) as string;
         if (line !== "") {
           break;
         }
       }
       clog({ line, bufnrDpswalk });
       await close();
-      await vim.execute(`
-        edit ${line}
-      `);
+      await denops.cmd(`edit ${line}`);
     },
 
     async dpsQuit(..._args: unknown[]): Promise<void> {
@@ -264,35 +270,44 @@ main(async ({ vim }) => {
     },
 
     async setMapWalk(..._args: unknown[]): Promise<void> {
-      const bufname = (await vim.call(`bufname`)) as string;
+      const bufname = (await denops.call(`bufname`)) as string;
       clog({ func: "setMapWalk", bufname });
-      await vim.execute(`
+      await execute(
+        denops,
+        `
         imap <silent><buffer> <cr> <plug>(dps-walk-enter)
         nmap <silent><buffer> <cr> <plug>(dps-walk-enter)
         nmap <silent><buffer><nowait> <esc> <plug>(dps-walk-quit)
 
         nnoremap <silent><buffer><nowait> i <esc><c-w>pA
         nnoremap <silent><buffer><nowait> a <esc><c-w>pA
-      `);
+      `,
+      );
     },
     async setMapFilter(..._args: unknown[]): Promise<void> {
-      const bufname = (await vim.call(`bufname`)) as string;
+      const bufname = (await denops.call(`bufname`)) as string;
       clog({ func: "setMapFilter", bufname });
-      await vim.execute(`
+      await execute(
+        denops,
+        `
         imap <silent><buffer> <cr> <plug>(dps-walk-enter)
         nmap <silent><buffer> <cr> <plug>(dps-walk-enter)
 
         inoremap <silent><buffer><nowait> <esc> <esc><c-w>p
         inoremap <silent><buffer> <c-j> <esc><c-w>p:call cursor(line('.')+1,0)<cr><c-w>pA
         inoremap <silent><buffer> <c-k> <esc><c-w>p:call cursor(line('.')-1,0)<cr><c-w>pA
-      `);
+      `,
+      );
     },
-  });
+  };
 
-  await vim.execute(`
-    command! -nargs=* DenopsWalk call denops#notify('${vim.name}', 'run', [<f-args>])
-    command! -nargs=* DenopsWalkBufferDir call denops#notify('${vim.name}', 'runBufferDir', [<f-args>])
-  `);
+  await execute(
+    denops,
+    `
+    command! -nargs=* DenopsWalk call denops#notify('${denops.name}', 'run', [<f-args>])
+    command! -nargs=* DenopsWalkBufferDir call denops#notify('${denops.name}', 'runBufferDir', [<f-args>])
+  `,
+  );
 
   clog("dps-walk has loaded");
-});
+}

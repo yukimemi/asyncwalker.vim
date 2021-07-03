@@ -1,13 +1,9 @@
 {
-  "tsserver.enable": false,
   "deno.enable": true,
   "deno.lint": true,
-  "coc.source.file.trimSameExts": [],
+  "deno.unstable": true,
   "prettier.disableLanguages": [
-    "javascript",
-    "javascriptreact",
     "typescript",
-    "typescriptreact"
+    "javascript"
   ]
 }
-
