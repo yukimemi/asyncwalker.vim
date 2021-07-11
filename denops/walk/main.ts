@@ -84,8 +84,6 @@ export async function main(denops: Denops): Promise<void> {
     }
 
     clog({ func: "update", curbuf });
-    // const input =
-    //   ((await denops.call("getbufline", bufnrFilter, 1)) as string[])[0];
     const input = (await fn.getbufline(denops, bufnrFilter, 1))[0];
     clog({ func: "update", input, prevInput });
 
@@ -224,10 +222,20 @@ export async function main(denops: Denops): Promise<void> {
   };
 
   denops.dispatcher = {
+    // deno-lint-ignore require-await
     async run(...args: unknown[]): Promise<void> {
-      clog({ args });
-
-      await walkDir(args as string[]);
+      try {
+        (async () => {
+          try {
+            clog({ args });
+            await walkDir(args as string[]);
+          } catch (e) {
+            clog(e);
+          }
+        })();
+      } catch (e) {
+        clog(e);
+      }
     },
 
     async runBufferDir(...args: unknown[]): Promise<void> {
