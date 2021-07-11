@@ -222,17 +222,10 @@ export async function main(denops: Denops): Promise<void> {
   };
 
   denops.dispatcher = {
-    // deno-lint-ignore require-await
     async run(...args: unknown[]): Promise<void> {
       try {
-        (async () => {
-          try {
-            clog({ args });
-            await walkDir(args as string[]);
-          } catch (e) {
-            clog(e);
-          }
-        })();
+        clog({ args });
+        await walkDir(args as string[]);
       } catch (e) {
         clog(e);
       }
@@ -241,7 +234,7 @@ export async function main(denops: Denops): Promise<void> {
     async runBufferDir(...args: unknown[]): Promise<void> {
       clog({ args });
 
-      const bufname = (await fn.bufname(denops)) as string;
+      const bufname = (await denops.call("bufname")) as string;
       const bufdir = (await fn.fnamemodify(denops, bufname, ":h")) as string;
       clog({ bufdir });
 
