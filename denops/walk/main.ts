@@ -1,4 +1,14 @@
-import { _, autocmd, Denops, execute, flags, fs, path, vars } from "./deps.ts";
+import {
+  _,
+  autocmd,
+  Denops,
+  execute,
+  flags,
+  fn,
+  fs,
+  path,
+  vars,
+} from "./deps.ts";
 
 let entries: string[] = [];
 let filterEntries: string[] = [];
@@ -73,26 +83,21 @@ export async function main(denops: Denops): Promise<void> {
       return;
     }
 
-    const input = ((await denops.call(
-      "getbufline",
-      bufnrFilter,
-      1,
-    )) as string[])[0];
-    const re = new RegExp(input, "i");
+    clog({ func: "update", curbuf });
+    // const input =
+    //   ((await denops.call("getbufline", bufnrFilter, 1)) as string[])[0];
+    const input = (await fn.getbufline(denops, bufnrFilter, 1))[0];
+    clog({ func: "update", input, prevInput });
 
     if (input === prevInput && !force) {
       return;
     }
 
+    const re = new RegExp(input, "i");
     filterEntries = entries.filter((e) => re.test(e));
-    clog({ func: "update", input, prevInput });
     console.log(`[${filterEntries.length} / ${entries.length}]`);
-    await denops.cmd(`call deletebufline(bufnr, 1, '$')`, { bufnr });
-    await denops.cmd(`call setbufline(bufnr, "1", filterEntries)`, {
-      bufnr,
-      filterEntries,
-    });
-
+    await fn.deletebufline(denops, bufnr, 1, "$");
+    await fn.setbufline(denops, bufnr, "1", filterEntries);
     prevInput = input;
   };
 
@@ -127,10 +132,10 @@ export async function main(denops: Denops): Promise<void> {
     const a = flags.parse(args);
     const pattern = a._.length > 0
       ? (a._ as string[])
-      : [(await denops.call("input", "Search for pattern: ")) as string];
+      : [(await fn.input(denops, "Search for pattern: ")) as string];
 
     let dir = a.path ?? cwd;
-    dir = await denops.call("expand", dir);
+    dir = await fn.expand(denops, dir);
 
     if (!path.isAbsolute(dir)) {
       dir = path.join(cwd, dir);
@@ -168,7 +173,7 @@ export async function main(denops: Denops): Promise<void> {
       call cursor(line('$'), 0)
     `,
     );
-    if ((await denops.call("has", "nvim")) as boolean) {
+    if ((await fn.has(denops, "nvim")) as boolean) {
       await denops.cmd(`startinsert!`);
     } else {
       await denops.cmd(`call feedkeys("a")`);
@@ -228,9 +233,8 @@ export async function main(denops: Denops): Promise<void> {
     async runBufferDir(...args: unknown[]): Promise<void> {
       clog({ args });
 
-      const bufname = (await denops.call("bufname")) as string;
-      const bufdir =
-        (await denops.call("fnamemodify", bufname, ":h")) as string;
+      const bufname = (await fn.bufname(denops)) as string;
+      const bufdir = (await fn.fnamemodify(denops, bufname, ":h")) as string;
       clog({ bufdir });
 
       args.push(`--path=${bufdir}`);
@@ -254,7 +258,7 @@ export async function main(denops: Denops): Promise<void> {
 
       let line: string;
       while (true) {
-        line = (await denops.call("getline", ".")) as string;
+        line = (await fn.getline(denops, ".")) as string;
         if (line !== "") {
           break;
         }
