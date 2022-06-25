@@ -22,6 +22,7 @@ import {
 let entries: string[] = [];
 let filterEntries: string[] = [];
 let prevInput = "";
+let prevBufnr = -1;
 let bufnrDpswalk = 0;
 let bufnrFilter = 0;
 let stop = false;
@@ -173,7 +174,9 @@ export async function main(denops: Denops): Promise<void> {
       dir = path.join(cwd, dir);
     }
 
-    clog({ pattern, dir });
+    prevBufnr = await fn.bufnr(denops);
+
+    clog({ pattern, dir, prevBufnr });
 
     const prompt = ">";
 
@@ -275,6 +278,7 @@ export async function main(denops: Denops): Promise<void> {
       clog({ line });
       await close();
       if (existsSync(line)) {
+        await goto(prevBufnr);
         await denops.cmd(`edit ${line}`);
       } else {
         echoerr(denops, `Not found: [${line}]`);
