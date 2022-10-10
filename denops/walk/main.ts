@@ -26,6 +26,7 @@ let prevWinId = -1;
 let bufnrDpswalk = 0;
 let bufnrFilter = 0;
 let stop = false;
+let done = false;
 
 export function existsSync(filePath: string): boolean {
   try {
@@ -93,8 +94,8 @@ export async function main(denops: Denops): Promise<void> {
     return await fn.bufnr(denops);
   };
 
-  const update = async (bufnr: number, force: boolean): Promise<void> => {
-    clog({ func: "update", bufnr, force });
+  const update = async (force: boolean): Promise<void> => {
+    clog({ func: "update", force });
 
     const curbuf = await fn.bufnr(denops);
     const input = (await fn.getbufline(denops, bufnrFilter, 1))[0];
@@ -109,18 +110,29 @@ export async function main(denops: Denops): Promise<void> {
       filterEntries = entries.filter((e) => re.test(e));
 
       await batch(denops, async (denops) => {
-        await echo(denops, `[${filterEntries.length} / ${entries.length}]`);
+        if (done) {
+          await echo(
+            denops,
+            `[${filterEntries.length} / ${entries.length}] walk end !`,
+          );
+        } else {
+          await echo(denops, `[${filterEntries.length} / ${entries.length}]`);
+        }
 
         if (curbuf === bufnrDpswalk || input === prevInput) {
           // Append only.
-          const buf = await fn.getline(denops, 1, "$");
-          const rest = _.difference(buf, filterEntries);
-          await fn.appendbufline(denops, bufnrDpswalk, "$", rest);
+          const buf = await fn.getbufline(denops, bufnrDpswalk, 1, "$") || [];
+          const rest = _.difference(filterEntries, buf);
+          clog({ buf, filterEntries, rest });
+          if (buf.length === 0) {
+            await fn.setbufline(denops, bufnrDpswalk, "1", rest);
+          } else {
+            await fn.appendbufline(denops, bufnrDpswalk, "$", rest);
+          }
         } else {
-          await fn.deletebufline(denops, bufnr, 1, "$");
-          await fn.setbufline(denops, bufnr, "1", filterEntries);
+          await fn.deletebufline(denops, bufnrDpswalk, 1, "$");
+          await fn.setbufline(denops, bufnrDpswalk, "1", filterEntries);
         }
-
         await denops.cmd("redraw!");
       });
       prevInput = input;
@@ -158,6 +170,7 @@ export async function main(denops: Denops): Promise<void> {
     entries = [];
     filterEntries = [];
     stop = false;
+    done = false;
 
     const a = flags.parse(args);
     let pattern = a._.length > 0 ? (a._ as string[]) : [];
@@ -187,6 +200,18 @@ export async function main(denops: Denops): Promise<void> {
 
     await batch(denops, async (denops) => {
       bufnrDpswalk = await mkBuf(10, "dpswalk");
+      await autocmd.group(denops, "dpswalk", (helper) => {
+        helper.remove("*", "<buffer>");
+        helper.define(
+          [
+            "CursorHold",
+            "CursorHoldI",
+          ],
+          "<buffer>",
+          `call denops#notify('${denops.name}', 'filterUpdate', [v:true])`,
+        );
+      });
+
       bufnrFilter = await mkBuf(1, "dpswalk-filter");
 
       const promptName = "dpswalk_filter_prompt";
@@ -207,16 +232,20 @@ export async function main(denops: Denops): Promise<void> {
           bufnrFilter,
         },
       );
-      await autocmd.group(denops, "dpswalk", (helper) => {
+      await autocmd.group(denops, "dpswalk-filter", (helper) => {
         helper.remove("*", "<buffer>");
         helper.define(
-          ["TextChanged", "TextChangedI", "TextChangedP"],
+          [
+            "TextChanged",
+            "TextChangedI",
+            "TextChangedP",
+          ],
           "<buffer>",
-          `call denops#notify('${denops.name}', 'filterUpdate', [${bufnrDpswalk}])`,
+          `call denops#notify('${denops.name}', 'filterUpdate', [v:false])`,
         );
       });
-      await denops.cmd("redraw!");
     });
+    await denops.cmd("redraw!");
 
     await gotoBufnr(bufnrFilter);
     if (ensureBoolean(await fn.has(denops, "nvim"))) {
@@ -239,10 +268,12 @@ export async function main(denops: Denops): Promise<void> {
       entries.push(entry.path);
       cnt++;
       if (cnt % bufsize === 0) {
-        await update(bufnrDpswalk, true);
+        await update(true);
       }
     }
-    await update(bufnrDpswalk, true);
+    clog(`all done`);
+    done = true;
+    await update(true);
   };
 
   denops.dispatcher = {
@@ -269,8 +300,8 @@ export async function main(denops: Denops): Promise<void> {
 
     async filterUpdate(...args: unknown[]): Promise<void> {
       clog({ func: "filterUpdate", args });
-      const bufnr = ensureNumber(args[0]);
-      await update(bufnr, false);
+      const force = ensureBoolean(args[0]);
+      await update(force);
     },
 
     async dpsEnter(..._args: unknown[]): Promise<void> {
