@@ -325,8 +325,7 @@ export async function main(denops: Denops): Promise<void> {
     },
 
     async setMapWalk(..._args: unknown[]): Promise<void> {
-      const bufname = await fn.bufname(denops);
-      clog({ func: "setMapWalk", bufname });
+      clog({ func: "setMapWalk" });
       await execute(
         denops,
         `
@@ -340,8 +339,8 @@ export async function main(denops: Denops): Promise<void> {
       );
     },
     async setMapFilter(..._args: unknown[]): Promise<void> {
-      const bufname = await fn.bufname(denops);
-      clog({ func: "setMapFilter", bufname });
+      const winId = await fn.bufwinid(denops, bufnrDpswalk);
+      clog({ func: "setMapFilter", winId });
       await execute(
         denops,
         `
@@ -349,8 +348,9 @@ export async function main(denops: Denops): Promise<void> {
         nmap <silent><buffer> <cr> <plug>(dps-walk-enter)
 
         inoremap <silent><buffer><nowait> <esc> <esc><c-w>p
-        inoremap <silent><buffer> <c-j> <esc><c-w>p:call cursor(line('.')+1,0)<cr><c-w>pA
-        inoremap <silent><buffer> <c-k> <esc><c-w>p:call cursor(line('.')-1,0)<cr><c-w>pA
+
+        inoremap <buffer> <c-j> <c-o><cmd>call win_execute(${winId}, 'call cursor(line(".") % line("$") + 1, 0)')<cr>
+        inoremap <buffer> <c-k> <c-o><cmd>call win_execute(${winId}, 'call cursor((line(".") - 2 + line("$")) % line("$") + 1, 0)')<cr>
       `,
       );
     },
