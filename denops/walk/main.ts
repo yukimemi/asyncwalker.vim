@@ -22,7 +22,7 @@ import {
 let entries: string[] = [];
 let filterEntries: string[] = [];
 let prevInput = "";
-let prevBufnr = -1;
+let prevWinId = -1;
 let bufnrDpswalk = 0;
 let bufnrFilter = 0;
 let stop = false;
@@ -121,7 +121,7 @@ export async function main(denops: Denops): Promise<void> {
           await fn.setbufline(denops, bufnr, "1", filterEntries);
         }
 
-        await denops.cmd("redraw");
+        await denops.cmd("redraw!");
       });
       prevInput = input;
     } catch (e) {
@@ -140,11 +140,14 @@ export async function main(denops: Denops): Promise<void> {
     bufnrFilter = 0;
   };
 
-  const goto = async (bufnr: number): Promise<void> => {
+  const gotoBufnr = async (bufnr: number): Promise<void> => {
     const id = await fn.bufwinid(denops, bufnr);
-    clog({ id });
-    if (id !== -1) {
-      await fn.win_gotoid(denops, id);
+    await gotoWinId(id);
+  };
+  const gotoWinId = async (winId: number): Promise<void> => {
+    clog(`goto id: [${winId}]`);
+    if (winId !== -1) {
+      await fn.win_gotoid(denops, winId);
     }
   };
 
@@ -174,9 +177,9 @@ export async function main(denops: Denops): Promise<void> {
       dir = path.join(cwd, dir);
     }
 
-    prevBufnr = await fn.bufnr(denops);
+    prevWinId = ensureNumber(await fn.win_getid(denops));
 
-    clog({ pattern, dir, prevBufnr });
+    clog({ pattern, dir, prevWinId });
 
     const prompt = ">";
 
@@ -215,7 +218,7 @@ export async function main(denops: Denops): Promise<void> {
       await denops.cmd("redraw!");
     });
 
-    await goto(bufnrFilter);
+    await gotoBufnr(bufnrFilter);
     if (ensureBoolean(await fn.has(denops, "nvim"))) {
       await denops.cmd(`startinsert!`);
     } else {
@@ -273,13 +276,13 @@ export async function main(denops: Denops): Promise<void> {
     async dpsEnter(..._args: unknown[]): Promise<void> {
       stop = true;
 
-      await goto(bufnrDpswalk);
+      await gotoBufnr(bufnrDpswalk);
       const line = ensureString(await fn.getline(denops, "."));
       clog({ line });
       await close();
       if (existsSync(line)) {
-        await goto(prevBufnr);
-        await denops.cmd(`new ${line}`);
+        await gotoWinId(prevWinId);
+        await denops.cmd(`e ${line}`);
       } else {
         echoerr(denops, `Not found: [${line}]`);
       }
