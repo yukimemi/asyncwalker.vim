@@ -65,9 +65,10 @@ export async function main(denops: Denops): Promise<void> {
 
   const mkBuf = async (height: number, bufname: string): Promise<number> => {
     clog({ height, bufname });
-    await execute(
-      denops,
-      `
+    await batch(denops, async (denops) => {
+      await execute(
+        denops,
+        `
       botright ${height}new ${bufname}
       setlocal filetype=${bufname}
       setlocal bufhidden=hide
@@ -90,7 +91,8 @@ export async function main(denops: Denops): Promise<void> {
       setlocal signcolumn=yes
       setlocal winfixheight
     `,
-    );
+      );
+    });
     return await fn.bufnr(denops);
   };
 
@@ -227,14 +229,19 @@ export async function main(denops: Denops): Promise<void> {
         );
       });
     });
-    await gotoBufnr(bufnrFilter);
-    await denops.cmd("redraw!");
 
     if (ensureBoolean(await fn.has(denops, "nvim"))) {
-      await denops.cmd(`startinsert!`);
+      await batch(denops, async (denops) => {
+        await gotoBufnr(bufnrFilter);
+        await denops.cmd(`startinsert!`);
+      });
     } else {
-      await denops.cmd(`call feedkeys("a")`);
+      await batch(denops, async (denops) => {
+        await gotoBufnr(bufnrFilter);
+        await denops.cmd(`call feedkeys("a")`);
+      });
     }
+    await denops.cmd("redraw!");
 
     let cnt = 0;
     for await (
