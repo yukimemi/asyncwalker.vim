@@ -1,23 +1,23 @@
 import * as _ from "https://cdn.skypack.dev/lodash@4.17.21";
-import * as autocmd from "https://deno.land/x/denops_std@v3.8.2/autocmd/mod.ts";
-import * as flags from "https://deno.land/std@0.159.0/flags/mod.ts";
-import * as fn from "https://deno.land/x/denops_std@v3.8.2/function/mod.ts";
-import * as fs from "https://deno.land/std@0.159.0/fs/mod.ts";
-import * as path from "https://deno.land/std@0.159.0/path/mod.ts";
-import * as vars from "https://deno.land/x/denops_std@v3.8.2/variable/mod.ts";
-import type { Denops } from "https://deno.land/x/denops_std@v3.8.2/mod.ts";
+import * as autocmd from "https://deno.land/x/denops_std@v3.12.1/autocmd/mod.ts";
+import * as flags from "https://deno.land/std@0.170.0/flags/mod.ts";
+import * as fn from "https://deno.land/x/denops_std@v3.12.1/function/mod.ts";
+import * as fs from "https://deno.land/std@0.170.0/fs/mod.ts";
+import * as path from "https://deno.land/std@0.170.0/path/mod.ts";
+import * as vars from "https://deno.land/x/denops_std@v3.12.1/variable/mod.ts";
+import type { Denops } from "https://deno.land/x/denops_std@v3.12.1/mod.ts";
 import {
   ensureBoolean,
   ensureNumber,
   ensureString,
-} from "https://deno.land/x/unknownutil@v2.0.0/mod.ts";
-import { batch } from "https://deno.land/x/denops_std@v3.8.2/batch/mod.ts";
+} from "https://deno.land/x/unknownutil@v2.1.0/mod.ts";
+import { batch } from "https://deno.land/x/denops_std@v3.12.1/batch/mod.ts";
 import {
   echo,
   echoerr,
   execute,
   input,
-} from "https://deno.land/x/denops_std@v3.8.2/helper/mod.ts";
+} from "https://deno.land/x/denops_std@v3.12.1/helper/mod.ts";
 
 let entries: string[] = [];
 let filterEntries: string[] = [];
@@ -96,6 +96,10 @@ export async function main(denops: Denops): Promise<void> {
 
   const update = async (force: boolean): Promise<void> => {
     clog({ func: "update", force });
+
+    if (bufnrDpswalk === 0 || bufnrFilter === 0) {
+      return;
+    }
 
     const curbuf = await fn.bufnr(denops);
     const input = (await fn.getbufline(denops, bufnrFilter, 1))[0];
@@ -194,11 +198,8 @@ export async function main(denops: Denops): Promise<void> {
 
     clog({ pattern, dir, prevWinId });
 
-    const prompt = ">";
-
-    await close();
-
     await batch(denops, async (denops) => {
+      await close();
       bufnrDpswalk = await mkBuf(10, "dpswalk");
       await autocmd.group(denops, "dpswalk", (helper) => {
         helper.remove("*", "<buffer>");
@@ -213,25 +214,6 @@ export async function main(denops: Denops): Promise<void> {
       });
 
       bufnrFilter = await mkBuf(1, "dpswalk-filter");
-
-      const promptName = "dpswalk_filter_prompt";
-      const promptId = 2000;
-      await denops.cmd(
-        `call sign_define(promptName, {"text": prompt})`,
-        { prompt, promptName },
-      );
-      await denops.cmd(
-        `call sign_unplace("", {"id": promptId, "buffer": bufnrFilter})`,
-        { promptId, bufnrFilter },
-      );
-      await denops.cmd(
-        `call sign_place(promptId, "", promptName, bufnrFilter, {"lnum": line('$')})`,
-        {
-          promptId,
-          promptName,
-          bufnrFilter,
-        },
-      );
       await autocmd.group(denops, "dpswalk-filter", (helper) => {
         helper.remove("*", "<buffer>");
         helper.define(
@@ -245,9 +227,9 @@ export async function main(denops: Denops): Promise<void> {
         );
       });
     });
+    await gotoBufnr(bufnrFilter);
     await denops.cmd("redraw!");
 
-    await gotoBufnr(bufnrFilter);
     if (ensureBoolean(await fn.has(denops, "nvim"))) {
       await denops.cmd(`startinsert!`);
     } else {
@@ -306,17 +288,16 @@ export async function main(denops: Denops): Promise<void> {
 
     async dpsEnter(..._args: unknown[]): Promise<void> {
       stop = true;
-
       await gotoBufnr(bufnrDpswalk);
       const line = ensureString(await fn.getline(denops, "."));
       clog({ line });
-      await close();
       if (existsSync(line)) {
         await gotoWinId(prevWinId);
         await denops.cmd(`e ${line}`);
       } else {
         echoerr(denops, `Not found: [${line}]`);
       }
+      await close();
     },
 
     async dpsQuit(..._args: unknown[]): Promise<void> {
@@ -349,8 +330,8 @@ export async function main(denops: Denops): Promise<void> {
 
         inoremap <silent><buffer><nowait> <esc> <esc><c-w>p
 
-        inoremap <buffer> <c-j> <c-o><cmd>call win_execute(${winId}, 'call cursor(line(".") % line("$") + 1, 0)')<cr>
-        inoremap <buffer> <c-k> <c-o><cmd>call win_execute(${winId}, 'call cursor((line(".") - 2 + line("$")) % line("$") + 1, 0)')<cr>
+        inoremap <buffer> <c-j> <cmd>call win_execute(${winId}, 'call cursor(line(".") % line("$") + 1, 0)')<cr>
+        inoremap <buffer> <c-k> <cmd>call win_execute(${winId}, 'call cursor((line(".") - 2 + line("$")) % line("$") + 1, 0)')<cr>
       `,
       );
     },
