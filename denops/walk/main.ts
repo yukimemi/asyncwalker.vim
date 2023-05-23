@@ -1,23 +1,23 @@
 import * as _ from "https://cdn.skypack.dev/lodash@4.17.21";
-import * as autocmd from "https://deno.land/x/denops_std@v3.12.1/autocmd/mod.ts";
-import * as flags from "https://deno.land/std@0.170.0/flags/mod.ts";
-import * as fn from "https://deno.land/x/denops_std@v3.12.1/function/mod.ts";
-import * as fs from "https://deno.land/std@0.170.0/fs/mod.ts";
-import * as path from "https://deno.land/std@0.170.0/path/mod.ts";
-import * as vars from "https://deno.land/x/denops_std@v3.12.1/variable/mod.ts";
-import type { Denops } from "https://deno.land/x/denops_std@v3.12.1/mod.ts";
+import * as autocmd from "https://deno.land/x/denops_std@v5.0.0/autocmd/mod.ts";
+import * as flags from "https://deno.land/std@0.188.0/flags/mod.ts";
+import * as fn from "https://deno.land/x/denops_std@v5.0.0/function/mod.ts";
+import * as fs from "https://deno.land/std@0.188.0/fs/mod.ts";
+import * as path from "https://deno.land/std@0.188.0/path/mod.ts";
+import * as vars from "https://deno.land/x/denops_std@v5.0.0/variable/mod.ts";
+import type { Denops } from "https://deno.land/x/denops_std@v5.0.0/mod.ts";
 import {
   ensureBoolean,
   ensureNumber,
   ensureString,
-} from "https://deno.land/x/unknownutil@v2.1.0/mod.ts";
-import { batch } from "https://deno.land/x/denops_std@v3.12.1/batch/mod.ts";
+} from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
+import { batch } from "https://deno.land/x/denops_std@v5.0.0/batch/mod.ts";
 import {
   echo,
   echoerr,
   execute,
   input,
-} from "https://deno.land/x/denops_std@v3.12.1/helper/mod.ts";
+} from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
 
 let entries: string[] = [];
 let filterEntries: string[] = [];
