@@ -1,0 +1,119 @@
+---
+name: dps-walk
+description: Denops walk
+---
+
+=pod
+
+=head1 dps-walk
+
+Denops walk files.
+
+=head1 Features X<walk-features>
+
+dps-walk is a Vim plugin that walks files.
+
+=head1 Installation X<walk-installation>
+
+If you use L<folke/lazy.nvim|https://github.com/folke/lazy.nvim>.
+
+  {
+    "yukimemi/dps-walk",
+    lazy = false,
+    dependencies = {
+      "vim-denops/denops.vim",
+    },
+  }
+
+If you use L<yukimemi/dvpm|https://github.com/yukimemi/dvpm>.
+
+  dvpm.add({ url: "yukimemi/dps-walk" });
+
+=head1 Requirements X<walk-requirements>
+
+=item [Deno - A modern runtime for JavaScript and TypeScript](https://deno.land/)
+
+=item [vim-denops/denops.vim: 🐜 An ecosystem of Vim/Neovim which allows developers to write cross-platform plugins in Deno](https://github.com/vim-denops/denops.vim)
+
+=head1 Usage X<walk-usage>
+
+No special settings are required.
+`:DenopsWalk` and `:DenopsWalkBufferDir` command are available.
+
+=head1 Commands X<walk-commands>
+
+C<:DenopsWalk [--path=path]>                                      X<:DenopsWalk>
+Walk files and display buffer.
+You can filter files by typing.
+If --path is not specified, current directory is used.
+
+C<:DenopsWalkBufferDir>                                  X<:DenopsWalkBufferDir>
+Same as `:DenopsWalk --path="%:p:h"`.
+
+=head1 Config X<walk-config>
+
+No settings are required. However, the following settings can be made if necessary.
+
+C<g:walk_debug>                                                  X<g:walk_debug>
+Enable debug messages.
+default is v:false
+
+C<g:walk_height>                                                X<g:walk_height>
+Height of walk buffer.
+default is 15
+
+C<g:walk_chunk>                                                  X<g:walk_chunk>
+Chunk size of walk buffer.
+default is 500
+
+C<g:walk_ignore>                                                X<g:walk_ignore>
+Ignore patterns.
+default is ["\\.git", "\\.svn", "\\.hg", "\\.o$", "\\.obj$", "\\.a$", "\\.exe~?$", "tags$"]
+
+C<g:walk_no_mapping>                                        X<g:walk_no_mapping>
+Whether to disable default mappings.
+default is v:false
+
+=head1 Mappings X<walk-mappings>
+
+On filter buffer (`dpswalk-filter`), you can use the following mappings.
+
+C<E<lt>PlugE<gt>(dps-walk-cursor-down)>                    X<E<lt>PlugE<gt>(dps-walk-cursor-down)>
+Cursor move next line. (Default is <C-j>)
+
+C<E<lt>PlugE<gt>(dps-walk-cursor-up)>                        X<E<lt>PlugE<gt>(dps-walk-cursor-up)>
+Cursor move previous line. (Default is <C-k>)
+
+C<E<lt>PlugE<gt>(dps-walk-escape)>                              X<E<lt>PlugE<gt>(dps-walk-escape)>
+Escape filter buffer and go to walk buffer. (Default is <ESC>)
+
+C<E<lt>PlugE<gt>(dps-walk-enter)>                                X<E<lt>PlugE<gt>(dps-walk-enter)>
+Open cursor selected line. (Default is <CR>)
+
+On walk result buffer (`dpswalk`), the following mappings are enabled.
+
+C<E<lt>PlugE<gt>(dps-walk-enter)>                                X<E<lt>PlugE<gt>(dps-walk-enter)>
+Open cursor selected line. (Default is <CR>)
+
+C<E<lt>PlugE<gt>(dps-walk-quit)>                                  X<E<lt>PlugE<gt>(dps-walk-quit)>
+Quit walk and filter buffer. (Default is <ESC>)
+
+C<E<lt>PlugE<gt>(dps-walk-insert)>                              X<E<lt>PlugE<gt>(dps-walk-insert)>
+Go to filter buffer. (Default is i and a)
+
+=head1 Example X<walk-example>
+
+  nnoremap <space>wa <cmd>DenopsWalk<cr>
+  nnoremap <space>ws <cmd>DenopsWalk --path=~/src<cr>
+  nnoremap <space>wD <cmd>DenopsWalk --path=~/.dotfiles<cr>
+  nnoremap <space>wc <cmd>DenopsWalk --path=~/.cache<cr>
+  nnoremap <space>wm <cmd>DenopsWalk --path=~/.memolist<cr>
+  nnoremap <space>wd <cmd>DenopsWalkBufferDir<cr>
+
+=head1 License X<walk-license>
+
+Licensed under MIT License.
+
+Copyright (c) 2023 yukimemi
+
+=cut

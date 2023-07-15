@@ -1,32 +1,25 @@
 import * as _ from "https://cdn.skypack.dev/lodash@4.17.21";
-import * as autocmd from "https://deno.land/x/denops_std@v5.0.0/autocmd/mod.ts";
-import * as flags from "https://deno.land/std@0.188.0/flags/mod.ts";
-import * as fn from "https://deno.land/x/denops_std@v5.0.0/function/mod.ts";
-import * as fs from "https://deno.land/std@0.188.0/fs/mod.ts";
-import * as path from "https://deno.land/std@0.188.0/path/mod.ts";
-import * as vars from "https://deno.land/x/denops_std@v5.0.0/variable/mod.ts";
-import type { Denops } from "https://deno.land/x/denops_std@v5.0.0/mod.ts";
-import {
-  ensureBoolean,
-  ensureNumber,
-  ensureString,
-} from "https://deno.land/x/unknownutil@v2.1.1/mod.ts";
-import { batch } from "https://deno.land/x/denops_std@v5.0.0/batch/mod.ts";
-import {
-  echo,
-  echoerr,
-  execute,
-  input,
-} from "https://deno.land/x/denops_std@v5.0.0/helper/mod.ts";
+import * as autocmd from "https://deno.land/x/denops_std@v5.0.1/autocmd/mod.ts";
+import * as flags from "https://deno.land/std@0.194.0/flags/mod.ts";
+import * as fn from "https://deno.land/x/denops_std@v5.0.1/function/mod.ts";
+import * as fs from "https://deno.land/std@0.194.0/fs/mod.ts";
+import * as path from "https://deno.land/std@0.194.0/path/mod.ts";
+import * as vars from "https://deno.land/x/denops_std@v5.0.1/variable/mod.ts";
+import * as buffer from "https://deno.land/x/denops_std@v5.0.1/buffer/mod.ts";
+import type { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
+import { ensure, is } from "https://deno.land/x/unknownutil@v3.2.0/mod.ts";
+import { batch } from "https://deno.land/x/denops_std@v5.0.1/batch/mod.ts";
+import { echo, echoerr, execute, input } from "https://deno.land/x/denops_std@v5.0.1/helper/mod.ts";
 
 let entries: string[] = [];
 let filterEntries: string[] = [];
 let prevInput = "";
 let prevWinId = -1;
-let bufnrDpswalk = 0;
+let bufnrWalk = 0;
 let bufnrFilter = 0;
 let stop = false;
 let done = false;
+let noMapping = false;
 
 export function existsSync(filePath: string): boolean {
   try {
@@ -43,14 +36,9 @@ export function existsSync(filePath: string): boolean {
 export async function main(denops: Denops): Promise<void> {
   // debug.
   const debug = await vars.g.get(denops, "walk_debug", false);
-  // deno-lint-ignore no-explicit-any
-  const clog = (...data: any[]): void => {
-    if (debug) {
-      console.log(...data);
-    }
-  };
-  const bufsize = ensureNumber(await vars.g.get(denops, "walk_bufsize", 500));
-  const skips = (await vars.g.get(denops, "walk_skips", [
+  const height = await vars.g.get(denops, "walk_height", 15);
+  const chunk = await vars.g.get(denops, "walk_chunk", 500);
+  const ignore = await vars.g.get(denops, "walk_ignore", [
     "\\.git",
     "\\.svn",
     "\\.hg",
@@ -59,9 +47,17 @@ export async function main(denops: Denops): Promise<void> {
     "\\.a$",
     "\\.exe~?$",
     "tags$",
-  ])) as string[];
+  ]);
+  noMapping = await vars.g.get(denops, "walk_no_mapping", noMapping);
 
-  clog({ debug, bufsize, skips });
+  // deno-lint-ignore no-explicit-any
+  const clog = (...data: any[]): void => {
+    if (debug) {
+      console.log(...data);
+    }
+  };
+
+  clog({ debug, height, chunk, ignore });
 
   const mkBuf = async (height: number, bufname: string): Promise<number> => {
     clog({ height, bufname });
@@ -69,28 +65,28 @@ export async function main(denops: Denops): Promise<void> {
       await execute(
         denops,
         `
-      botright ${height}new ${bufname}
-      setlocal filetype=${bufname}
-      setlocal bufhidden=hide
-      setlocal buftype=nofile
-      setlocal colorcolumn=
-      setlocal concealcursor=inv
-      setlocal conceallevel=3
-      setlocal cursorline
-      setlocal foldcolumn=0
-      setlocal nobuflisted
-      setlocal nocursorcolumn
-      setlocal nofoldenable
-      setlocal nolist
-      setlocal nomodeline
-      setlocal nonumber
-      setlocal norelativenumber
-      setlocal nospell
-      setlocal noswapfile
-      setlocal nowrap
-      setlocal signcolumn=yes
-      setlocal winfixheight
-    `,
+          botright ${height}new ${bufname}
+          setlocal filetype=${bufname}
+          setlocal bufhidden=hide
+          setlocal buftype=nofile
+          setlocal colorcolumn=
+          setlocal concealcursor=inv
+          setlocal conceallevel=3
+          setlocal cursorline
+          setlocal foldcolumn=0
+          setlocal nobuflisted
+          setlocal nocursorcolumn
+          setlocal nofoldenable
+          setlocal nolist
+          setlocal nomodeline
+          setlocal nonumber
+          setlocal norelativenumber
+          setlocal nospell
+          setlocal noswapfile
+          setlocal nowrap
+          setlocal signcolumn=yes
+          setlocal winfixheight
+        `,
       );
     });
     return await fn.bufnr(denops);
@@ -99,7 +95,7 @@ export async function main(denops: Denops): Promise<void> {
   const update = async (force: boolean): Promise<void> => {
     clog({ func: "update", force });
 
-    if (bufnrDpswalk === 0 || bufnrFilter === 0) {
+    if (bufnrWalk === 0 || bufnrFilter === 0) {
       return;
     }
 
@@ -125,19 +121,19 @@ export async function main(denops: Denops): Promise<void> {
           await echo(denops, `[${filterEntries.length} / ${entries.length}]`);
         }
 
-        if (curbuf === bufnrDpswalk || input === prevInput) {
+        if (curbuf === bufnrWalk || input === prevInput) {
           // Append only.
-          const buf = await fn.getbufline(denops, bufnrDpswalk, 1, "$") || [];
+          const buf = await fn.getbufline(denops, bufnrWalk, 1, "$") || [];
           const rest = _.difference(filterEntries, buf);
           clog({ buf, filterEntries, rest });
           if (buf.length === 0) {
-            await fn.setbufline(denops, bufnrDpswalk, "1", rest);
+            await fn.setbufline(denops, bufnrWalk, 1, rest);
           } else {
-            await fn.appendbufline(denops, bufnrDpswalk, "$", rest);
+            await fn.appendbufline(denops, bufnrWalk, "$", rest);
           }
         } else {
-          await fn.deletebufline(denops, bufnrDpswalk, 1, "$");
-          await fn.setbufline(denops, bufnrDpswalk, "1", filterEntries);
+          await fn.deletebufline(denops, bufnrWalk, 1, "$");
+          await fn.setbufline(denops, bufnrWalk, 1, filterEntries);
         }
         await denops.cmd("redraw!");
       });
@@ -148,13 +144,13 @@ export async function main(denops: Denops): Promise<void> {
   };
 
   const close = async (): Promise<void> => {
-    if (bufnrDpswalk !== 0) {
-      await denops.cmd(`bwipeout! ${bufnrDpswalk}`);
+    if (bufnrWalk !== 0) {
+      await denops.cmd(`bwipeout! ${bufnrWalk}`);
     }
     if (bufnrFilter !== 0) {
       await denops.cmd(`bwipeout! ${bufnrFilter}`);
     }
-    bufnrDpswalk = 0;
+    bufnrWalk = 0;
     bufnrFilter = 0;
   };
 
@@ -171,7 +167,7 @@ export async function main(denops: Denops): Promise<void> {
 
   const walkDir = async (args: string[]): Promise<void> => {
     clog({ args });
-    const cwd = ensureString(await fn.getcwd(denops));
+    const cwd = ensure(await fn.getcwd(denops), is.String);
 
     entries = [];
     filterEntries = [];
@@ -196,13 +192,13 @@ export async function main(denops: Denops): Promise<void> {
       dir = path.join(cwd, dir);
     }
 
-    prevWinId = ensureNumber(await fn.win_getid(denops));
+    prevWinId = ensure(await fn.win_getid(denops), is.Number);
 
     clog({ pattern, dir, prevWinId });
 
     await batch(denops, async (denops) => {
       await close();
-      bufnrDpswalk = await mkBuf(10, "dpswalk");
+      bufnrWalk = await mkBuf(height, "dpswalk");
       await autocmd.group(denops, "dpswalk", (helper) => {
         helper.remove("*", "<buffer>");
         helper.define(
@@ -230,7 +226,7 @@ export async function main(denops: Denops): Promise<void> {
       });
     });
 
-    if (ensureBoolean(await fn.has(denops, "nvim"))) {
+    if (ensure(await fn.has(denops, "nvim"), is.Boolean)) {
       await batch(denops, async (denops) => {
         await gotoBufnr(bufnrFilter);
         await denops.cmd(`startinsert!`);
@@ -248,7 +244,7 @@ export async function main(denops: Denops): Promise<void> {
       const entry of fs.walk(dir, {
         includeDirs: false,
         match: pattern.map((x) => new RegExp(x, "i")),
-        skip: skips.map((x) => new RegExp(x, "i")),
+        skip: ignore.map((x) => new RegExp(x, "i")),
       })
     ) {
       if (stop) {
@@ -256,7 +252,7 @@ export async function main(denops: Denops): Promise<void> {
       }
       entries.push(entry.path);
       cnt++;
-      if (cnt % bufsize === 0) {
+      if (cnt % chunk === 0) {
         await update(true);
       }
     }
@@ -289,18 +285,18 @@ export async function main(denops: Denops): Promise<void> {
 
     async filterUpdate(...args: unknown[]): Promise<void> {
       clog({ func: "filterUpdate", args });
-      const force = ensureBoolean(args[0]);
+      const force = ensure(args[0], is.Boolean);
       await update(force);
     },
 
     async dpsEnter(..._args: unknown[]): Promise<void> {
       stop = true;
-      await gotoBufnr(bufnrDpswalk);
-      const line = ensureString(await fn.getline(denops, "."));
+      await gotoBufnr(bufnrWalk);
+      const line = ensure(await fn.getline(denops, "."), is.String);
       clog({ line });
       if (existsSync(line)) {
         await gotoWinId(prevWinId);
-        await denops.cmd(`e ${line}`);
+        await buffer.open(denops, line);
       } else {
         echoerr(denops, `Not found: [${line}]`);
       }
@@ -312,34 +308,65 @@ export async function main(denops: Denops): Promise<void> {
       await close();
     },
 
+    async dpsInsert(..._args: unknown[]): Promise<void> {
+      await gotoBufnr(bufnrFilter);
+      await denops.cmd("startinsert!");
+    },
+
+    async dpsEscape(..._args: unknown[]): Promise<void> {
+      await gotoBufnr(bufnrWalk);
+      await denops.cmd("stopinsert!");
+    },
+
+    async dpsCursor(...args: unknown[]): Promise<void> {
+      const direction = ensure(args[0], is.Boolean);
+      const winId = await fn.bufwinid(denops, bufnrWalk);
+      if (direction) {
+        await fn.win_execute(denops, winId, `call cursor(line(".") % line("$") + 1, 0)`, true);
+      } else {
+        await fn.win_execute(
+          denops,
+          winId,
+          `call cursor((line(".") - 2 + line("$")) % line("$") + 1, 0)`,
+          true,
+        );
+      }
+    },
+
     async setMapWalk(..._args: unknown[]): Promise<void> {
       clog({ func: "setMapWalk" });
+      if (noMapping) {
+        return;
+      }
       await execute(
         denops,
         `
-        imap <silent><buffer> <cr> <plug>(dps-walk-enter)
-        nmap <silent><buffer> <cr> <plug>(dps-walk-enter)
-        nmap <silent><buffer><nowait> <esc> <plug>(dps-walk-quit)
+          imap <silent><buffer> <cr> <plug>(dps-walk-enter)
+          nmap <silent><buffer> <cr> <plug>(dps-walk-enter)
+          nmap <silent><buffer><nowait> <esc> <plug>(dps-walk-quit)
 
-        nnoremap <silent><buffer><nowait> i <esc><c-w>pA
-        nnoremap <silent><buffer><nowait> a <esc><c-w>pA
+          nnoremap <silent><buffer><nowait> i <plug>(dps-walk-insert)
+          nnoremap <silent><buffer><nowait> a <plug>(dps-walk-insert)
       `,
       );
     },
     async setMapFilter(..._args: unknown[]): Promise<void> {
-      const winId = await fn.bufwinid(denops, bufnrDpswalk);
+      const winId = await fn.bufwinid(denops, bufnrWalk);
       clog({ func: "setMapFilter", winId });
+      if (noMapping) {
+        return;
+      }
       await execute(
         denops,
         `
-        imap <silent><buffer> <cr> <plug>(dps-walk-enter)
-        nmap <silent><buffer> <cr> <plug>(dps-walk-enter)
+          imap <silent><buffer> <cr> <plug>(dps-walk-enter)
+          nmap <silent><buffer> <cr> <plug>(dps-walk-enter)
 
-        inoremap <silent><buffer><nowait> <esc> <esc><c-w>p
+          inoremap <silent><buffer><nowait> <esc> <plug>(dps-walk-escape)
 
-        inoremap <buffer> <c-j> <cmd>call win_execute(${winId}, 'call cursor(line(".") % line("$") + 1, 0)')<cr>
-        inoremap <buffer> <c-k> <cmd>call win_execute(${winId}, 'call cursor((line(".") - 2 + line("$")) % line("$") + 1, 0)')<cr>
-      `,
+          inoremap <buffer> <c-j> <plug>(dps-walk-cursor-down)
+          inoremap <buffer> <c-k> <plug>(dps-walk-cursor-up)
+        `,
       );
     },
   };
@@ -347,13 +374,24 @@ export async function main(denops: Denops): Promise<void> {
   await execute(
     denops,
     `
-    inoremap <plug>(dps-walk-enter) <esc><cmd>call denops#request('${denops.name}', 'dpsEnter', [])<cr>
-    nnoremap <plug>(dps-walk-enter) <cmd>call denops#request('${denops.name}', 'dpsEnter', [])<cr>
-    nnoremap <plug>(dps-walk-quit) <cmd>call denops#request('${denops.name}', 'dpsQuit', [])<cr>
+      inoremap <plug>(dps-walk-enter) <esc><cmd>call denops#request('${denops.name}', 'dpsEnter', [])<cr>
+      nnoremap <plug>(dps-walk-enter) <cmd>call denops#request('${denops.name}', 'dpsEnter', [])<cr>
 
-    command! -nargs=* DenopsWalk call denops#notify('${denops.name}', 'run', [<f-args>])
-    command! -nargs=* DenopsWalkBufferDir call denops#notify('${denops.name}', 'runBufferDir', [<f-args>])
-  `,
+      inoremap <plug>(dps-walk-quit) <cmd>call denops#request('${denops.name}', 'dpsQuit', [])<cr>
+      nnoremap <plug>(dps-walk-quit) <cmd>call denops#request('${denops.name}', 'dpsQuit', [])<cr>
+
+      inoremap <plug>(dps-walk-insert) <cmd>call denops#request('${denops.name}', 'dpsInsert', [])<cr>
+      nnoremap <plug>(dps-walk-insert) <cmd>call denops#request('${denops.name}', 'dpsInsert', [])<cr>
+
+      inoremap <plug>(dps-walk-escape) <cmd>call denops#request('${denops.name}', 'dpsEscape', [])<cr>
+      nnoremap <plug>(dps-walk-escape) <cmd>call denops#request('${denops.name}', 'dpsEscape', [])<cr>
+
+      inoremap <plug>(dps-walk-cursor-up) <cmd>call denops#request('${denops.name}', 'dpsCursor', [v:false])<cr>
+      inoremap <plug>(dps-walk-cursor-down) <cmd>call denops#request('${denops.name}', 'dpsCursor', [v:true])<cr>
+
+      command! -nargs=* DenopsWalk call denops#notify('${denops.name}', 'run', [<f-args>])
+      command! -nargs=* DenopsWalkBufferDir call denops#notify('${denops.name}', 'runBufferDir', [<f-args>])
+    `,
   );
   await autocmd.group(denops, "dpswalk-map", (helper) => {
     helper.remove("*");
