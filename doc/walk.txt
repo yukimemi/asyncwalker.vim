@@ -17,6 +17,7 @@ Installation ~
 If you use folke/lazy.nvim |https://github.com/folke/lazy.nvim|.
 
 >
+
   {
     "yukimemi/dps-walk",
     lazy = false,
@@ -24,12 +25,15 @@ If you use folke/lazy.nvim |https://github.com/folke/lazy.nvim|.
       "vim-denops/denops.vim",
     },
   }
+
 <
 
 If you use yukimemi/dvpm |https://github.com/yukimemi/dvpm|.
 
 >
+
   dvpm.add({ url: "yukimemi/dps-walk" });
+
 <
 
 =============================================================================
@@ -117,12 +121,14 @@ Example ~
                                                                *walk-example*
 
 >
+
   nnoremap <space>wa <cmd>DenopsWalk<cr>
   nnoremap <space>ws <cmd>DenopsWalk --path=~/src<cr>
   nnoremap <space>wD <cmd>DenopsWalk --path=~/.dotfiles<cr>
   nnoremap <space>wc <cmd>DenopsWalk --path=~/.cache<cr>
   nnoremap <space>wm <cmd>DenopsWalk --path=~/.memolist<cr>
   nnoremap <space>wd <cmd>DenopsWalkBufferDir<cr>
+
 <
 
 =============================================================================

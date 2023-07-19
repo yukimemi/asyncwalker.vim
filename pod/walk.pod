@@ -17,6 +17,8 @@ dps-walk is a Vim plugin that walks files.
 
 If you use L<folke/lazy.nvim|https://github.com/folke/lazy.nvim>.
 
+=begin lua
+
   {
     "yukimemi/dps-walk",
     lazy = false,
@@ -25,9 +27,15 @@ If you use L<folke/lazy.nvim|https://github.com/folke/lazy.nvim>.
     },
   }
 
+=end lua
+
 If you use L<yukimemi/dvpm|https://github.com/yukimemi/dvpm>.
 
+=begin typescript
+
   dvpm.add({ url: "yukimemi/dps-walk" });
+
+=end typescript
 
 =head1 Requirements X<walk-requirements>
 
@@ -103,12 +111,16 @@ Go to filter buffer. (Default is i and a)
 
 =head1 Example X<walk-example>
 
+=begin vim
+
   nnoremap <space>wa <cmd>DenopsWalk<cr>
   nnoremap <space>ws <cmd>DenopsWalk --path=~/src<cr>
   nnoremap <space>wD <cmd>DenopsWalk --path=~/.dotfiles<cr>
   nnoremap <space>wc <cmd>DenopsWalk --path=~/.cache<cr>
   nnoremap <space>wm <cmd>DenopsWalk --path=~/.memolist<cr>
   nnoremap <space>wd <cmd>DenopsWalkBufferDir<cr>
+
+=end vim
 
 =head1 License X<walk-license>
 
