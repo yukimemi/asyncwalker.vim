@@ -85,11 +85,6 @@ Escape filter buffer and go to walk buffer. (Default is <ESC>)
 `<Plug>(dps-walk-enter)`                                
 Open cursor selected line. (Default is <CR>)
 
-On walk result buffer (`dpswalk`), the following mappings are enabled.
-
-`<Plug>(dps-walk-enter)`                                
-Open cursor selected line. (Default is <CR>)
-
 `<Plug>(dps-walk-quit)`                                  
 Quit walk and filter buffer. (Default is <ESC>)
 
