@@ -10,6 +10,7 @@ import type { Denops } from "https://deno.land/x/denops_std@v5.2.0/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.11.0/mod.ts";
 import { batch } from "https://deno.land/x/denops_std@v5.2.0/batch/mod.ts";
 import { echo, echoerr, execute, input } from "https://deno.land/x/denops_std@v5.2.0/helper/mod.ts";
+import { send } from "https://deno.land/x/denops_std@v5.2.0/helper/keymap.ts";
 
 let entries: string[] = [];
 let filterEntries: string[] = [];
@@ -226,17 +227,8 @@ export async function main(denops: Denops): Promise<void> {
       });
     });
 
-    if (ensure(await fn.has(denops, "nvim"), is.Boolean)) {
-      await batch(denops, async (denops) => {
-        await gotoBufnr(bufnrFilter);
-        await denops.cmd(`startinsert!`);
-      });
-    } else {
-      await batch(denops, async (denops) => {
-        await gotoBufnr(bufnrFilter);
-        await denops.cmd(`call feedkeys("a")`);
-      });
-    }
+    await gotoBufnr(bufnrFilter);
+    await send(denops, "a");
     await denops.cmd("redraw!");
 
     let cnt = 0;
