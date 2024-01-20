@@ -1,16 +1,16 @@
 import * as _ from "https://cdn.skypack.dev/lodash@4.17.21";
-import * as autocmd from "https://deno.land/x/denops_std@v5.2.0/autocmd/mod.ts";
+import * as autocmd from "https://deno.land/x/denops_std@v5.3.0/autocmd/mod.ts";
 import * as flags from "https://deno.land/std@0.212.0/flags/mod.ts";
-import * as fn from "https://deno.land/x/denops_std@v5.2.0/function/mod.ts";
+import * as fn from "https://deno.land/x/denops_std@v5.3.0/function/mod.ts";
 import * as fs from "https://deno.land/std@0.212.0/fs/mod.ts";
 import * as path from "https://deno.land/std@0.212.0/path/mod.ts";
-import * as vars from "https://deno.land/x/denops_std@v5.2.0/variable/mod.ts";
-import * as buffer from "https://deno.land/x/denops_std@v5.2.0/buffer/mod.ts";
-import type { Denops } from "https://deno.land/x/denops_std@v5.2.0/mod.ts";
+import * as vars from "https://deno.land/x/denops_std@v5.3.0/variable/mod.ts";
+import * as buffer from "https://deno.land/x/denops_std@v5.3.0/buffer/mod.ts";
+import type { Denops } from "https://deno.land/x/denops_std@v5.3.0/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.14.1/mod.ts";
-import { batch } from "https://deno.land/x/denops_std@v5.2.0/batch/mod.ts";
-import { echo, echoerr, execute, input } from "https://deno.land/x/denops_std@v5.2.0/helper/mod.ts";
-import { send } from "https://deno.land/x/denops_std@v5.2.0/helper/keymap.ts";
+import { batch } from "https://deno.land/x/denops_std@v5.3.0/batch/mod.ts";
+import { echo, echoerr, execute, input } from "https://deno.land/x/denops_std@v5.3.0/helper/mod.ts";
+import { send } from "https://deno.land/x/denops_std@v5.3.0/helper/keymap.ts";
 
 let entries: string[] = [];
 let filterEntries: string[] = [];
