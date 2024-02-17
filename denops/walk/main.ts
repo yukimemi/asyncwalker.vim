@@ -7,7 +7,7 @@ import * as path from "https://deno.land/std@0.216.0/path/mod.ts";
 import * as vars from "https://deno.land/x/denops_std@v6.0.1/variable/mod.ts";
 import * as buffer from "https://deno.land/x/denops_std@v6.0.1/buffer/mod.ts";
 import type { Denops } from "https://deno.land/x/denops_std@v6.0.1/mod.ts";
-import { ensure, is } from "https://deno.land/x/unknownutil@v3.16.1/mod.ts";
+import { ensure, is } from "https://deno.land/x/unknownutil@v3.16.3/mod.ts";
 import { batch } from "https://deno.land/x/denops_std@v6.0.1/batch/mod.ts";
 import { echo, echoerr, execute, input } from "https://deno.land/x/denops_std@v6.0.1/helper/mod.ts";
 import { send } from "https://deno.land/x/denops_std@v6.0.1/helper/keymap.ts";
