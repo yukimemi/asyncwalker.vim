@@ -1,9 +1,9 @@
 import * as _ from "https://cdn.skypack.dev/lodash@4.17.21";
 import * as autocmd from "https://deno.land/x/denops_std@v6.3.0/autocmd/mod.ts";
-import * as flags from "https://deno.land/std@0.218.2/flags/mod.ts";
+import * as flags from "https://deno.land/std@0.219.1/flags/mod.ts";
 import * as fn from "https://deno.land/x/denops_std@v6.3.0/function/mod.ts";
-import * as fs from "https://deno.land/std@0.218.2/fs/mod.ts";
-import * as path from "https://deno.land/std@0.218.2/path/mod.ts";
+import * as fs from "https://deno.land/std@0.219.1/fs/mod.ts";
+import * as path from "https://deno.land/std@0.219.1/path/mod.ts";
 import * as vars from "https://deno.land/x/denops_std@v6.3.0/variable/mod.ts";
 import * as buffer from "https://deno.land/x/denops_std@v6.3.0/buffer/mod.ts";
 import type { Denops } from "https://deno.land/x/denops_std@v6.3.0/mod.ts";
