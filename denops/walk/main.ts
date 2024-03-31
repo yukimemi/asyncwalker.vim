@@ -10,7 +10,6 @@ import type { Denops } from "https://deno.land/x/denops_std@v6.4.0/mod.ts";
 import { ensure, is } from "https://deno.land/x/unknownutil@v3.17.0/mod.ts";
 import { batch } from "https://deno.land/x/denops_std@v6.4.0/batch/mod.ts";
 import { echo, echoerr, execute, input } from "https://deno.land/x/denops_std@v6.4.0/helper/mod.ts";
-import { send } from "https://deno.land/x/denops_std@v6.4.0/helper/keymap.ts";
 
 let entries: string[] = [];
 let filterEntries: string[] = [];
@@ -228,7 +227,6 @@ export async function main(denops: Denops): Promise<void> {
     });
 
     await gotoBufnr(bufnrFilter);
-    await send(denops, "a");
     await denops.cmd("redraw!");
 
     let cnt = 0;
