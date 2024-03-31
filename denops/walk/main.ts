@@ -226,7 +226,7 @@ export async function main(denops: Denops): Promise<void> {
       });
     });
 
-    await gotoBufnr(bufnrFilter);
+    await gotoBufnr(bufnrWalk);
     await denops.cmd("redraw!");
 
     let cnt = 0;
