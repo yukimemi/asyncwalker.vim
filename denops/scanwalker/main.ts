@@ -35,10 +35,10 @@ export function existsSync(filePath: string): boolean {
 
 export async function main(denops: Denops): Promise<void> {
   // debug.
-  const debug = await vars.g.get(denops, "walk_debug", false);
-  const height = await vars.g.get(denops, "walk_height", 15);
-  const chunk = await vars.g.get(denops, "walk_chunk", 500);
-  const ignore = await vars.g.get(denops, "walk_ignore", [
+  const debug = await vars.g.get(denops, "scanwalker_debug", false);
+  const height = await vars.g.get(denops, "scanwalker_height", 15);
+  const chunk = await vars.g.get(denops, "scanwalker_chunk", 500);
+  const ignore = await vars.g.get(denops, "scanwalker_ignore", [
     "\\.git",
     "\\.svn",
     "\\.hg",
@@ -48,7 +48,7 @@ export async function main(denops: Denops): Promise<void> {
     "\\.exe~?$",
     "tags$",
   ]);
-  noMapping = await vars.g.get(denops, "walk_no_mapping", noMapping);
+  noMapping = await vars.g.get(denops, "scanwalker_no_mapping", noMapping);
 
   // deno-lint-ignore no-explicit-any
   const clog = (...data: any[]): void => {
@@ -198,8 +198,8 @@ export async function main(denops: Denops): Promise<void> {
 
     await batch(denops, async (denops) => {
       await close();
-      bufnrWalk = await mkBuf(height, "dpswalk");
-      await autocmd.group(denops, "dpswalk", (helper) => {
+      bufnrWalk = await mkBuf(height, "scanwalker");
+      await autocmd.group(denops, "scanwalker", (helper) => {
         helper.remove("*", "<buffer>");
         helper.define(
           [
@@ -211,8 +211,8 @@ export async function main(denops: Denops): Promise<void> {
         );
       });
 
-      bufnrFilter = await mkBuf(1, "dpswalk-filter");
-      await autocmd.group(denops, "dpswalk-filter", (helper) => {
+      bufnrFilter = await mkBuf(1, "scanwalker-filter");
+      await autocmd.group(denops, "scanwalker-filter", (helper) => {
         helper.remove("*", "<buffer>");
         helper.define(
           [
@@ -279,7 +279,7 @@ export async function main(denops: Denops): Promise<void> {
       await update(force);
     },
 
-    async dpsEnter(..._args: unknown[]): Promise<void> {
+    async scanWalkerEnter(..._args: unknown[]): Promise<void> {
       stop = true;
       await gotoBufnr(bufnrWalk);
       const line = ensure(await fn.getline(denops, "."), is.String);
@@ -293,22 +293,22 @@ export async function main(denops: Denops): Promise<void> {
       await close();
     },
 
-    async dpsQuit(..._args: unknown[]): Promise<void> {
+    async scanWalkerQuit(..._args: unknown[]): Promise<void> {
       stop = true;
       await close();
     },
 
-    async dpsInsert(..._args: unknown[]): Promise<void> {
+    async scanWalkerInsert(..._args: unknown[]): Promise<void> {
       await gotoBufnr(bufnrFilter);
       await denops.cmd("startinsert!");
     },
 
-    async dpsEscape(..._args: unknown[]): Promise<void> {
+    async scanWalkerEscape(..._args: unknown[]): Promise<void> {
       await gotoBufnr(bufnrWalk);
       await denops.cmd("stopinsert!");
     },
 
-    async dpsCursor(...args: unknown[]): Promise<void> {
+    async scanWalkerCursor(...args: unknown[]): Promise<void> {
       const direction = ensure(args[0], is.Boolean);
       const winId = await fn.bufwinid(denops, bufnrWalk);
       if (direction) {
@@ -331,12 +331,12 @@ export async function main(denops: Denops): Promise<void> {
       await execute(
         denops,
         `
-          imap <silent><buffer> <cr> <plug>(dps-walk-enter)
-          nmap <silent><buffer> <cr> <plug>(dps-walk-enter)
-          nmap <silent><buffer><nowait> <esc> <plug>(dps-walk-quit)
+          imap <silent><buffer> <cr> <plug>(scanwalker-enter)
+          nmap <silent><buffer> <cr> <plug>(scanwalker-enter)
+          nmap <silent><buffer><nowait> <esc> <plug>(scanwalker-quit)
 
-          nnoremap <silent><buffer><nowait> i <plug>(dps-walk-insert)
-          nnoremap <silent><buffer><nowait> a <plug>(dps-walk-insert)
+          nnoremap <silent><buffer><nowait> i <plug>(scanwalker-insert)
+          nnoremap <silent><buffer><nowait> a <plug>(scanwalker-insert)
       `,
       );
     },
@@ -349,13 +349,13 @@ export async function main(denops: Denops): Promise<void> {
       await execute(
         denops,
         `
-          imap <silent><buffer> <cr> <plug>(dps-walk-enter)
-          nmap <silent><buffer> <cr> <plug>(dps-walk-enter)
+          imap <silent><buffer> <cr> <plug>(scanwalker-enter)
+          nmap <silent><buffer> <cr> <plug>(scanwalker-enter)
 
-          inoremap <silent><buffer><nowait> <esc> <plug>(dps-walk-escape)
+          inoremap <silent><buffer><nowait> <esc> <plug>(scanwalker-escape)
 
-          inoremap <buffer> <c-j> <plug>(dps-walk-cursor-down)
-          inoremap <buffer> <c-k> <plug>(dps-walk-cursor-up)
+          inoremap <buffer> <c-j> <plug>(scanwalker-cursor-down)
+          inoremap <buffer> <c-k> <plug>(scanwalker-cursor-up)
         `,
       );
     },
@@ -364,38 +364,38 @@ export async function main(denops: Denops): Promise<void> {
   await execute(
     denops,
     `
-      inoremap <plug>(dps-walk-enter) <esc><cmd>call denops#request('${denops.name}', 'dpsEnter', [])<cr>
-      nnoremap <plug>(dps-walk-enter) <cmd>call denops#request('${denops.name}', 'dpsEnter', [])<cr>
+      inoremap <plug>(scanwalker-enter) <esc><cmd>call denops#request('${denops.name}', 'scanWalkerEnter', [])<cr>
+      nnoremap <plug>(scanwalker-enter) <cmd>call denops#request('${denops.name}', 'scanWalkerEnter', [])<cr>
 
-      inoremap <plug>(dps-walk-quit) <cmd>call denops#request('${denops.name}', 'dpsQuit', [])<cr>
-      nnoremap <plug>(dps-walk-quit) <cmd>call denops#request('${denops.name}', 'dpsQuit', [])<cr>
+      inoremap <plug>(scanwalker-quit) <cmd>call denops#request('${denops.name}', 'scanWalkerQuit', [])<cr>
+      nnoremap <plug>(scanwalker-quit) <cmd>call denops#request('${denops.name}', 'scanWalkerQuit', [])<cr>
 
-      inoremap <plug>(dps-walk-insert) <cmd>call denops#request('${denops.name}', 'dpsInsert', [])<cr>
-      nnoremap <plug>(dps-walk-insert) <cmd>call denops#request('${denops.name}', 'dpsInsert', [])<cr>
+      inoremap <plug>(scanwalker-insert) <cmd>call denops#request('${denops.name}', 'scanWalkerInsert', [])<cr>
+      nnoremap <plug>(scanwalker-insert) <cmd>call denops#request('${denops.name}', 'scanWalkerInsert', [])<cr>
 
-      inoremap <plug>(dps-walk-escape) <cmd>call denops#request('${denops.name}', 'dpsEscape', [])<cr>
-      nnoremap <plug>(dps-walk-escape) <cmd>call denops#request('${denops.name}', 'dpsEscape', [])<cr>
+      inoremap <plug>(scanwalker-escape) <cmd>call denops#request('${denops.name}', 'scanWalkerEscape', [])<cr>
+      nnoremap <plug>(scanwalker-escape) <cmd>call denops#request('${denops.name}', 'scanWalkerEscape', [])<cr>
 
-      inoremap <plug>(dps-walk-cursor-up) <cmd>call denops#request('${denops.name}', 'dpsCursor', [v:false])<cr>
-      inoremap <plug>(dps-walk-cursor-down) <cmd>call denops#request('${denops.name}', 'dpsCursor', [v:true])<cr>
+      inoremap <plug>(scanwalker-cursor-up) <cmd>call denops#request('${denops.name}', 'scanWalkerCursor', [v:false])<cr>
+      inoremap <plug>(scanwalker-cursor-down) <cmd>call denops#request('${denops.name}', 'scanWalkerCursor', [v:true])<cr>
 
-      command! -nargs=* DenopsWalk call denops#notify('${denops.name}', 'run', [<f-args>])
-      command! -nargs=* DenopsWalkBufferDir call denops#notify('${denops.name}', 'runBufferDir', [<f-args>])
+      command! -nargs=* ScanWalk call denops#notify('${denops.name}', 'run', [<f-args>])
+      command! -nargs=* ScanWalkBufferDir call denops#notify('${denops.name}', 'runBufferDir', [<f-args>])
     `,
   );
-  await autocmd.group(denops, "dpswalk-map", (helper) => {
+  await autocmd.group(denops, "scanwalker-map", (helper) => {
     helper.remove("*");
     helper.define(
       "FileType",
-      "dpswalk",
+      "scanwalker",
       `call denops#request('${denops.name}', 'setMapWalk', [])`,
     );
     helper.define(
       "FileType",
-      "dpswalk-filter",
+      "scanwalker-filter",
       `call denops#request('${denops.name}', 'setMapFilter', [])`,
     );
   });
 
-  clog("dps-walk has loaded");
+  clog("scanwalker.vim has loaded");
 }
