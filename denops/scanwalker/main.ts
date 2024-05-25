@@ -1,15 +1,15 @@
 import * as _ from "https://cdn.skypack.dev/lodash@4.17.21";
 import * as autocmd from "https://deno.land/x/denops_std@v6.5.0/autocmd/mod.ts";
-import * as flags from "https://deno.land/std@0.224.0/flags/mod.ts";
-import * as fn from "https://deno.land/x/denops_std@v6.5.0/function/mod.ts";
-import * as fs from "https://deno.land/std@0.224.0/fs/mod.ts";
-import * as path from "https://deno.land/std@0.224.0/path/mod.ts";
-import * as vars from "https://deno.land/x/denops_std@v6.5.0/variable/mod.ts";
 import * as buffer from "https://deno.land/x/denops_std@v6.5.0/buffer/mod.ts";
+import * as fn from "https://deno.land/x/denops_std@v6.5.0/function/mod.ts";
+import * as fs from "jsr:@std/fs@0.224.0";
+import * as path from "jsr:@std/path@0.224.0";
+import * as vars from "https://deno.land/x/denops_std@v6.5.0/variable/mod.ts";
 import type { Denops } from "https://deno.land/x/denops_std@v6.5.0/mod.ts";
-import { ensure, is } from "https://deno.land/x/unknownutil@v3.18.1/mod.ts";
 import { batch } from "https://deno.land/x/denops_std@v6.5.0/batch/mod.ts";
 import { echo, echoerr, execute, input } from "https://deno.land/x/denops_std@v6.5.0/helper/mod.ts";
+import { parseArgs } from "jsr:@std/cli@0.224.0";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 let entries: string[] = [];
 let filterEntries: string[] = [];
@@ -167,14 +167,14 @@ export async function main(denops: Denops): Promise<void> {
 
   const walkDir = async (args: string[]): Promise<void> => {
     clog({ args });
-    const cwd = ensure(await fn.getcwd(denops), is.String);
+    const cwd = z.string().parse(await fn.getcwd(denops));
 
     entries = [];
     filterEntries = [];
     stop = false;
     done = false;
 
-    const a = flags.parse(args);
+    const a = parseArgs(args);
     let pattern = a._.length > 0 ? (a._ as string[]) : [];
     if (pattern.length == 0) {
       const userInput = await input(denops, { prompt: "Search for pattern: " });
@@ -192,7 +192,7 @@ export async function main(denops: Denops): Promise<void> {
       dir = path.join(cwd, dir);
     }
 
-    prevWinId = ensure(await fn.win_getid(denops), is.Number);
+    prevWinId = z.number().parse(await fn.win_getid(denops));
 
     clog({ pattern, dir, prevWinId });
 
@@ -275,14 +275,14 @@ export async function main(denops: Denops): Promise<void> {
 
     async filterUpdate(...args: unknown[]): Promise<void> {
       clog({ func: "filterUpdate", args });
-      const force = ensure(args[0], is.Boolean);
+      const force = z.boolean().parse(args[0]);
       await update(force);
     },
 
     async scanWalkerEnter(..._args: unknown[]): Promise<void> {
       stop = true;
       await gotoBufnr(bufnrWalk);
-      const line = ensure(await fn.getline(denops, "."), is.String);
+      const line = z.string().parse(await fn.getline(denops, "."));
       clog({ line });
       if (existsSync(line)) {
         await gotoWinId(prevWinId);
@@ -309,7 +309,7 @@ export async function main(denops: Denops): Promise<void> {
     },
 
     async scanWalkerCursor(...args: unknown[]): Promise<void> {
-      const direction = ensure(args[0], is.Boolean);
+      const direction = z.boolean().parse(args[0]);
       const winId = await fn.bufwinid(denops, bufnrWalk);
       if (direction) {
         await fn.win_execute(denops, winId, `call cursor(line(".") % line("$") + 1, 0)`, true);
