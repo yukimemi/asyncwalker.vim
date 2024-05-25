@@ -9,7 +9,7 @@ import type { Denops } from "https://deno.land/x/denops_std@v6.5.0/mod.ts";
 import { batch } from "https://deno.land/x/denops_std@v6.5.0/batch/mod.ts";
 import { echo, echoerr, execute, input } from "https://deno.land/x/denops_std@v6.5.0/helper/mod.ts";
 import { parseArgs } from "jsr:@std/cli@0.224.0";
-import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 
 let entries: string[] = [];
 let filterEntries: string[] = [];
