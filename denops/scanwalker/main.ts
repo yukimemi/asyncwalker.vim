@@ -1,3 +1,9 @@
+// =============================================================================
+// File        : main.ts
+// Author      : yukimemi
+// Last Change : 2024/05/25 15:44:56.
+// =============================================================================
+
 import * as _ from "https://cdn.skypack.dev/lodash@4.17.21";
 import * as autocmd from "https://deno.land/x/denops_std@v6.5.0/autocmd/mod.ts";
 import * as buffer from "https://deno.land/x/denops_std@v6.5.0/buffer/mod.ts";
