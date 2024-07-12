@@ -5,15 +5,15 @@
 // =============================================================================
 
 import * as _ from "https://cdn.skypack.dev/lodash@4.17.21";
-import * as autocmd from "https://deno.land/x/denops_std@v6.5.0/autocmd/mod.ts";
-import * as buffer from "https://deno.land/x/denops_std@v6.5.0/buffer/mod.ts";
-import * as fn from "https://deno.land/x/denops_std@v6.5.0/function/mod.ts";
+import * as autocmd from "https://deno.land/x/denops_std@v6.5.1/autocmd/mod.ts";
+import * as buffer from "https://deno.land/x/denops_std@v6.5.1/buffer/mod.ts";
+import * as fn from "https://deno.land/x/denops_std@v6.5.1/function/mod.ts";
 import * as fs from "jsr:@std/fs@0.229.3";
 import * as path from "jsr:@std/path@0.225.2";
-import * as vars from "https://deno.land/x/denops_std@v6.5.0/variable/mod.ts";
-import type { Denops } from "https://deno.land/x/denops_std@v6.5.0/mod.ts";
-import { batch } from "https://deno.land/x/denops_std@v6.5.0/batch/mod.ts";
-import { echo, echoerr, execute, input } from "https://deno.land/x/denops_std@v6.5.0/helper/mod.ts";
+import * as vars from "https://deno.land/x/denops_std@v6.5.1/variable/mod.ts";
+import type { Denops } from "https://deno.land/x/denops_std@v6.5.1/mod.ts";
+import { batch } from "https://deno.land/x/denops_std@v6.5.1/batch/mod.ts";
+import { echo, echoerr, execute, input } from "https://deno.land/x/denops_std@v6.5.1/helper/mod.ts";
 import { parseArgs } from "jsr:@std/cli@0.224.7";
 import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 
