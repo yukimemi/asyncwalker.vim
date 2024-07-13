@@ -9,7 +9,7 @@ import * as autocmd from "https://deno.land/x/denops_std@v6.5.1/autocmd/mod.ts";
 import * as buffer from "https://deno.land/x/denops_std@v6.5.1/buffer/mod.ts";
 import * as fn from "https://deno.land/x/denops_std@v6.5.1/function/mod.ts";
 import * as fs from "jsr:@std/fs@0.229.3";
-import * as path from "jsr:@std/path@0.225.2";
+import * as path from "jsr:@std/path@1.0.0";
 import * as vars from "https://deno.land/x/denops_std@v6.5.1/variable/mod.ts";
 import type { Denops } from "https://deno.land/x/denops_std@v6.5.1/mod.ts";
 import { batch } from "https://deno.land/x/denops_std@v6.5.1/batch/mod.ts";
