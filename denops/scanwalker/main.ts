@@ -1,21 +1,21 @@
 // =============================================================================
 // File        : main.ts
 // Author      : yukimemi
-// Last Change : 2024/05/25 15:44:56.
+// Last Change : 2024/07/28 21:16:01.
 // =============================================================================
 
-import * as _ from "https://cdn.skypack.dev/lodash@4.17.21";
-import * as autocmd from "https://deno.land/x/denops_std@v6.5.1/autocmd/mod.ts";
-import * as buffer from "https://deno.land/x/denops_std@v6.5.1/buffer/mod.ts";
-import * as fn from "https://deno.land/x/denops_std@v6.5.1/function/mod.ts";
+import * as autocmd from "jsr:@denops/std@7.0.0/autocmd";
+import * as buffer from "jsr:@denops/std@7.0.0/buffer";
+import * as fn from "jsr:@denops/std@7.0.0/function";
 import * as fs from "jsr:@std/fs@1.0.0";
 import * as path from "jsr:@std/path@1.0.2";
-import * as vars from "https://deno.land/x/denops_std@v6.5.1/variable/mod.ts";
-import type { Denops } from "https://deno.land/x/denops_std@v6.5.1/mod.ts";
-import { batch } from "https://deno.land/x/denops_std@v6.5.1/batch/mod.ts";
-import { echo, echoerr, execute, input } from "https://deno.land/x/denops_std@v6.5.1/helper/mod.ts";
+import * as vars from "jsr:@denops/std@7.0.0/variable";
+import type { Denops } from "jsr:@denops/std@7.0.0";
+import { batch } from "jsr:@denops/std@7.0.0/batch";
+import { difference } from "jsr:@es-toolkit/es-toolkit@1.13.1";
+import { echo, echoerr, execute, input } from "jsr:@denops/std@7.0.0/helper";
 import { parseArgs } from "jsr:@std/cli@1.0.1";
-import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
+import { z } from "npm:zod@3.23.8";
 
 let entries: string[] = [];
 let filterEntries: string[] = [];
@@ -130,7 +130,7 @@ export async function main(denops: Denops): Promise<void> {
         if (curbuf === bufnrWalk || input === prevInput) {
           // Append only.
           const buf = await fn.getbufline(denops, bufnrWalk, 1, "$") || [];
-          const rest = _.difference(filterEntries, buf);
+          const rest = difference(filterEntries, buf);
           clog({ buf, filterEntries, rest });
           if (buf.length === 0) {
             await fn.setbufline(denops, bufnrWalk, 1, rest);
