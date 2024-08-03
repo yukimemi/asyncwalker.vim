@@ -4,17 +4,17 @@
 // Last Change : 2024/07/28 21:16:01.
 // =============================================================================
 
-import * as autocmd from "jsr:@denops/std@7.0.0/autocmd";
-import * as buffer from "jsr:@denops/std@7.0.0/buffer";
-import * as fn from "jsr:@denops/std@7.0.0/function";
-import * as fs from "jsr:@std/fs@1.0.0";
+import * as autocmd from "jsr:@denops/std@7.0.3/autocmd";
+import * as buffer from "jsr:@denops/std@7.0.3/buffer";
+import * as fn from "jsr:@denops/std@7.0.3/function";
+import * as fs from "jsr:@std/fs@1.0.1";
 import * as path from "jsr:@std/path@1.0.2";
-import * as vars from "jsr:@denops/std@7.0.0/variable";
-import type { Denops } from "jsr:@denops/std@7.0.0";
-import { batch } from "jsr:@denops/std@7.0.0/batch";
+import * as vars from "jsr:@denops/std@7.0.3/variable";
+import type { Denops } from "jsr:@denops/std@7.0.3";
+import { batch } from "jsr:@denops/std@7.0.3/batch";
 import { difference } from "jsr:@es-toolkit/es-toolkit@1.13.1";
-import { echo, echoerr, execute, input } from "jsr:@denops/std@7.0.0/helper";
-import { parseArgs } from "jsr:@std/cli@1.0.1";
+import { echo, echoerr, execute, input } from "jsr:@denops/std@7.0.3/helper";
+import { parseArgs } from "jsr:@std/cli@1.0.2";
 import { z } from "npm:zod@3.23.8";
 
 let entries: string[] = [];
