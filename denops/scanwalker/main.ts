@@ -12,9 +12,9 @@ import * as path from "jsr:@std/path@1.0.2";
 import * as vars from "jsr:@denops/std@7.0.3/variable";
 import type { Denops } from "jsr:@denops/std@7.0.3";
 import { batch } from "jsr:@denops/std@7.0.3/batch";
-import { difference } from "jsr:@es-toolkit/es-toolkit@1.13.1";
+import { difference } from "jsr:@es-toolkit/es-toolkit@1.15.1";
 import { echo, echoerr, execute, input } from "jsr:@denops/std@7.0.3/helper";
-import { parseArgs } from "jsr:@std/cli@1.0.2";
+import { parseArgs } from "jsr:@std/cli@1.0.3";
 import { z } from "npm:zod@3.23.8";
 
 let entries: string[] = [];
