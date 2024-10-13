@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : main.ts
 // Author      : yukimemi
-// Last Change : 2024/10/13 22:56:53.
+// Last Change : 2024/10/13 22:58:40.
 // =============================================================================
 
 import * as autocmd from "jsr:@denops/std@7.2.0/autocmd";
@@ -184,7 +184,7 @@ export async function main(denops: Denops): Promise<void> {
 
     const a = parseArgs(args);
     let pattern = a._.length > 0 ? (a._ as string[]) : [];
-    if (pattern.length == 0 && args.length !== 0) {
+    if (pattern.length == 0 && !resume) {
       const userInput = await input(denops, { prompt: "Search for pattern: " });
       if (userInput == null) {
         clog(`input is null ! so cancel !`);
