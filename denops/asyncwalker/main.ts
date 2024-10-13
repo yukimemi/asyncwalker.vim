@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : main.ts
 // Author      : yukimemi
-// Last Change : 2024/10/13 22:58:40.
+// Last Change : 2024/10/13 23:06:49.
 // =============================================================================
 
 import * as autocmd from "jsr:@denops/std@7.2.0/autocmd";
@@ -178,6 +178,7 @@ export async function main(denops: Denops): Promise<void> {
     if (!resume) {
       entries = [];
       filterEntries = [];
+      prevInput = "";
     }
     stop = false;
     done = false;
@@ -232,6 +233,9 @@ export async function main(denops: Denops): Promise<void> {
           `call denops#notify('${denops.name}', 'filterUpdate', [v:false])`,
         );
       });
+      if (resume) {
+        await fn.setbufline(denops, bufnrFilter, 1, prevInput);
+      }
     });
 
     await gotoBufnr(bufnrWalk);
