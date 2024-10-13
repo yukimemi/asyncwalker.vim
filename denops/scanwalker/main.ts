@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : main.ts
 // Author      : yukimemi
-// Last Change : 2024/07/28 21:16:01.
+// Last Change : 2024/10/13 14:24:53.
 // =============================================================================
 
 import * as autocmd from "jsr:@denops/std@7.2.0/autocmd";
@@ -92,7 +92,7 @@ export async function main(denops: Denops): Promise<void> {
           setlocal nowrap
           setlocal signcolumn=yes
           setlocal winfixheight
-        `,
+      `,
       );
     });
     return await fn.bufnr(denops);
@@ -175,14 +175,16 @@ export async function main(denops: Denops): Promise<void> {
     clog({ args });
     const cwd = z.string().parse(await fn.getcwd(denops));
 
-    entries = [];
-    filterEntries = [];
+    if (args.length !== 0) {
+      entries = [];
+      filterEntries = [];
+    }
     stop = false;
     done = false;
 
     const a = parseArgs(args);
     let pattern = a._.length > 0 ? (a._ as string[]) : [];
-    if (pattern.length == 0) {
+    if (pattern.length == 0 && args.length !== 0) {
       const userInput = await input(denops, { prompt: "Search for pattern: " });
       if (userInput == null) {
         clog(`input is null ! so cancel !`);
@@ -257,6 +259,10 @@ export async function main(denops: Denops): Promise<void> {
     await update(true);
   };
 
+  const resume = async (): Promise<void> => {
+    await walkDir([]);
+  };
+
   denops.dispatcher = {
     async run(...args: unknown[]): Promise<void> {
       try {
@@ -265,6 +271,10 @@ export async function main(denops: Denops): Promise<void> {
       } catch (e) {
         clog(e);
       }
+    },
+
+    async resume(): Promise<void> {
+      await resume();
     },
 
     async runBufferDir(...args: unknown[]): Promise<void> {
@@ -387,6 +397,7 @@ export async function main(denops: Denops): Promise<void> {
 
       command! -nargs=* ScanWalk call denops#notify('${denops.name}', 'run', [<f-args>])
       command! -nargs=* ScanWalkBufferDir call denops#notify('${denops.name}', 'runBufferDir', [<f-args>])
+      command! ScanWalkResume call denops#notify('${denops.name}', 'resume', [])
     `,
   );
   await autocmd.group(denops, "scanwalker-map", (helper) => {

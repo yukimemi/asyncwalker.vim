@@ -58,6 +58,9 @@ If --path is not specified, current directory is used.
 `:ScanWalkBufferDir`                                     *:ScanWalkBufferDir*
 Same as `:ScanWalk --path="%:p:h"`.
 
+:ScanWalkResume                                             *:ScanWalkResume*
+Resume walk buffer.
+
 =============================================================================
 Config ~
                                                           *scanwalker-config*
@@ -119,6 +122,7 @@ Example ~
 	nnoremap <space>wc <cmd>ScanWalk --path=~/.cache<cr>
 	nnoremap <space>wm <cmd>ScanWalk --path=~/.memolist<cr>
 	nnoremap <space>wd <cmd>ScanWalkBufferDir<cr>
+	nnoremap <space>wr <cmd>ScanWalkResume<cr>
 <
 
 =============================================================================

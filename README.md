@@ -46,6 +46,9 @@ If --path is not specified, current directory is used.
 `:ScanWalkBufferDir`
 Same as `:ScanWalk --path="%:p:h"`.
 
+`:ScanWalkResume`
+Resume walk buffer.
+
 # Config
 
 No settings are required. However, the following settings can be made if necessary.
@@ -101,6 +104,7 @@ nnoremap <space>wD <cmd>ScanWalk --path=~/.dotfiles<cr>
 nnoremap <space>wc <cmd>ScanWalk --path=~/.cache<cr>
 nnoremap <space>wm <cmd>ScanWalk --path=~/.memolist<cr>
 nnoremap <space>wd <cmd>ScanWalkBufferDir<cr>
+nnoremap <space>wr <cmd>ScanWalkResume<cr>
 ```
 
 # License
