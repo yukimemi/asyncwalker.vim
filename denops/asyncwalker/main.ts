@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : main.ts
 // Author      : yukimemi
-// Last Change : 2024/10/13 17:15:25.
+// Last Change : 2024/10/13 22:56:53.
 // =============================================================================
 
 import * as autocmd from "jsr:@denops/std@7.2.0/autocmd";
@@ -171,11 +171,11 @@ export async function main(denops: Denops): Promise<void> {
     }
   };
 
-  const walkDir = async (args: string[]): Promise<void> => {
+  const walkDir = async (args: string[], resume = false): Promise<void> => {
     clog({ args });
     const cwd = z.string().parse(await fn.getcwd(denops));
 
-    if (args.length !== 0) {
+    if (!resume) {
       entries = [];
       filterEntries = [];
     }
@@ -260,7 +260,7 @@ export async function main(denops: Denops): Promise<void> {
   };
 
   const resume = async (): Promise<void> => {
-    await walkDir([]);
+    await walkDir([], true);
   };
 
   denops.dispatcher = {
