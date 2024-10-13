@@ -1,10 +1,10 @@
-# scanwalker
+# asyncwalker
 
 Denops scan and walk files.
 
 # Features
 
-scanwalker is a Vim plugin that walks files.
+asyncwalker is a Vim plugin that walks files.
 
 # Installation
 
@@ -12,7 +12,7 @@ If you use [folke/lazy.nvim](https://github.com/folke/lazy.nvim).
 
 ```lua
 {
-  "yukimemi/scanwalker.vim",
+  "yukimemi/asyncwalker.vim",
   lazy = false,
   dependencies = {
     "vim-denops/denops.vim",
@@ -23,7 +23,7 @@ If you use [folke/lazy.nvim](https://github.com/folke/lazy.nvim).
 If you use [yukimemi/dvpm](https://github.com/yukimemi/dvpm).
 
 ```typescript
-dvpm.add({ url: "yukimemi/scanwalker.vim" });
+dvpm.add({ url: "yukimemi/asyncwalker.vim" });
 ```
 
 # Requirements
@@ -34,77 +34,77 @@ dvpm.add({ url: "yukimemi/scanwalker.vim" });
 # Usage
 
 No special settings are required.
-`:ScanWalk` and `:ScanWalkBufferDir` command are available.
+`:AsyncWalk` and `:AsyncWalkBufferDir` command are available.
 
 # Commands
 
-`:ScanWalk [--path=path]`
+`:AsyncWalk [--path=path]`
 Walk files and display buffer.
 You can filter files by typing.
 If --path is not specified, current directory is used.
 
-`:ScanWalkBufferDir`
-Same as `:ScanWalk --path="%:p:h"`.
+`:AsyncWalkBufferDir`
+Same as `:AsyncWalk --path="%:p:h"`.
 
-`:ScanWalkResume`
+`:AsyncWalkResume`
 Resume walk buffer.
 
 # Config
 
 No settings are required. However, the following settings can be made if necessary.
 
-`g:scanwalker_debug`
+`g:asyncwalker_debug`
 Enable debug messages.
 default is v:false
 
-`g:scanwalker_height`
+`g:asyncwalker_height`
 Height of walk buffer.
 default is 15
 
-`g:scanwalker_chunk`
+`g:asyncwalker_chunk`
 Chunk size of walk buffer.
 default is 500
 
-`g:scanwalker_ignore`
+`g:asyncwalker_ignore`
 Ignore patterns.
 default is ["\\.git", "\\.svn", "\\.hg", "\\.o$", "\\.obj$", "\\.a$", "\\.exe~?$", "tags$"]
 
-`g:scanwalker_no_mapping`
+`g:asyncwalker_no_mapping`
 Whether to disable default mappings.
 default is v:false
 
 # Mappings
 
-On filter buffer (`scanwalker-filter`), you can use the following mappings.
+On filter buffer (`asyncwalker-filter`), you can use the following mappings.
 
-`<Plug>(scanwalker-cursor-down)`
+`<Plug>(asyncwalker-cursor-down)`
 Cursor move next line. (Default is <C-j>)
 
-`<Plug>(scanwalker-cursor-up)`
+`<Plug>(asyncwalker-cursor-up)`
 Cursor move previous line. (Default is <C-k>)
 
-`<Plug>(scanwalker-escape)`
+`<Plug>(asyncwalker-escape)`
 Escape filter buffer and go to walk buffer. (Default is <ESC>)
 
-`<Plug>(scanwalker-enter)`
+`<Plug>(asyncwalker-enter)`
 Open cursor selected line. (Default is <CR>)
 
-`<Plug>(scanwalker-quit)`
+`<Plug>(asyncwalker-quit)`
 Quit walk and filter buffer. (Default is <ESC>)
 
-`<Plug>(scanwalker-insert)`
+`<Plug>(asyncwalker-insert)`
 Go to filter buffer. (Default is i and a)
 
 # Example
 
 ```vim
-nnoremap <space>wa <cmd>ScanWalk<cr>
-nnoremap <space>ws <cmd>ScanWalk --path=~/src<cr>
-nnoremap <space>wD <cmd>ScanWalk --path=~/.dotfiles<cr>
-nnoremap <space>wc <cmd>ScanWalk --path=~/.cache<cr>
-nnoremap <space>wm <cmd>ScanWalk --path=~/.memolist<cr>
-nnoremap <space>wd <cmd>ScanWalkBufferDir<cr>
-nnoremap <space>wr <cmd>ScanWalkResume<cr>
+nnoremap <space>wa <cmd>AsyncWalk<cr>
+nnoremap <space>ws <cmd>AsyncWalk --path=~/src<cr>
+nnoremap <space>wD <cmd>AsyncWalk --path=~/.dotfiles<cr>
+nnoremap <space>wc <cmd>AsyncWalk --path=~/.cache<cr>
+nnoremap <space>wm <cmd>AsyncWalk --path=~/.memolist<cr>
+nnoremap <space>wd <cmd>AsyncWalkBufferDir<cr>
+nnoremap <space>wr <cmd>AsyncWalkResume<cr>
 ```
 
 # License
