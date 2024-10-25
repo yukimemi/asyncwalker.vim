@@ -7,12 +7,12 @@
 import * as autocmd from "jsr:@denops/std@7.2.0/autocmd";
 import * as buffer from "jsr:@denops/std@7.2.0/buffer";
 import * as fn from "jsr:@denops/std@7.2.0/function";
-import * as fs from "jsr:@std/fs@1.0.4";
-import * as path from "jsr:@std/path@1.0.6";
+import * as fs from "jsr:@std/fs@1.0.5";
+import * as path from "jsr:@std/path@1.0.7";
 import * as vars from "jsr:@denops/std@7.2.0/variable";
 import type { Denops } from "jsr:@denops/std@7.2.0";
 import { batch } from "jsr:@denops/std@7.2.0/batch";
-import { difference } from "jsr:@es-toolkit/es-toolkit@1.25.2";
+import { difference } from "jsr:@es-toolkit/es-toolkit@1.26.1";
 import { echo, echoerr, execute, input } from "jsr:@denops/std@7.2.0/helper";
 import { parseArgs } from "jsr:@std/cli@1.0.6";
 import { z } from "npm:zod@3.23.8";
