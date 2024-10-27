@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : main.ts
 // Author      : yukimemi
-// Last Change : 2024/10/13 23:06:49.
+// Last Change : 2024/10/27 16:12:35.
 // =============================================================================
 
 import * as autocmd from "jsr:@denops/std@7.3.0/autocmd";
@@ -351,12 +351,12 @@ export async function main(denops: Denops): Promise<void> {
       await execute(
         denops,
         `
-          imap <silent><buffer> <cr> <plug>(asyncwalker-enter)
-          nmap <silent><buffer> <cr> <plug>(asyncwalker-enter)
-          nmap <silent><buffer><nowait> <esc> <plug>(asyncwalker-quit)
+          imap <silent><buffer> <cr> <Plug>(asyncwalker-enter)
+          nmap <silent><buffer> <cr> <Plug>(asyncwalker-enter)
+          nmap <silent><buffer><nowait> <esc> <Plug>(asyncwalker-quit)
 
-          nnoremap <silent><buffer><nowait> i <plug>(asyncwalker-insert)
-          nnoremap <silent><buffer><nowait> a <plug>(asyncwalker-insert)
+          nnoremap <silent><buffer><nowait> i <Plug>(asyncwalker-insert)
+          nnoremap <silent><buffer><nowait> a <Plug>(asyncwalker-insert)
       `,
       );
     },
@@ -369,13 +369,13 @@ export async function main(denops: Denops): Promise<void> {
       await execute(
         denops,
         `
-          imap <silent><buffer> <cr> <plug>(asyncwalker-enter)
-          nmap <silent><buffer> <cr> <plug>(asyncwalker-enter)
+          imap <silent><buffer> <cr> <Plug>(asyncwalker-enter)
+          nmap <silent><buffer> <cr> <Plug>(asyncwalker-enter)
 
-          inoremap <silent><buffer><nowait> <esc> <plug>(asyncwalker-escape)
+          inoremap <silent><buffer><nowait> <esc> <Plug>(asyncwalker-escape)
 
-          inoremap <buffer> <c-j> <plug>(asyncwalker-cursor-down)
-          inoremap <buffer> <c-k> <plug>(asyncwalker-cursor-up)
+          inoremap <buffer> <c-j> <Plug>(asyncwalker-cursor-down)
+          inoremap <buffer> <c-k> <Plug>(asyncwalker-cursor-up)
         `,
       );
     },
@@ -384,24 +384,20 @@ export async function main(denops: Denops): Promise<void> {
   await execute(
     denops,
     `
-      inoremap <plug>(asyncwalker-enter) <esc><cmd>call denops#request('${denops.name}', 'asyncwalkerEnter', [])<cr>
-      nnoremap <plug>(asyncwalker-enter) <cmd>call denops#request('${denops.name}', 'asyncwalkerEnter', [])<cr>
+      inoremap <Plug>(asyncwalker-enter) <esc><cmd>call denops#request('${denops.name}', 'asyncwalkerEnter', [])<cr>
+      nnoremap <Plug>(asyncwalker-enter) <cmd>call denops#request('${denops.name}', 'asyncwalkerEnter', [])<cr>
 
-      inoremap <plug>(asyncwalker-quit) <cmd>call denops#request('${denops.name}', 'asyncwalkerQuit', [])<cr>
-      nnoremap <plug>(asyncwalker-quit) <cmd>call denops#request('${denops.name}', 'asyncwalkerQuit', [])<cr>
+      inoremap <Plug>(asyncwalker-quit) <cmd>call denops#request('${denops.name}', 'asyncwalkerQuit', [])<cr>
+      nnoremap <Plug>(asyncwalker-quit) <cmd>call denops#request('${denops.name}', 'asyncwalkerQuit', [])<cr>
 
-      inoremap <plug>(asyncwalker-insert) <cmd>call denops#request('${denops.name}', 'asyncwalkerInsert', [])<cr>
-      nnoremap <plug>(asyncwalker-insert) <cmd>call denops#request('${denops.name}', 'asyncwalkerInsert', [])<cr>
+      inoremap <Plug>(asyncwalker-insert) <cmd>call denops#request('${denops.name}', 'asyncwalkerInsert', [])<cr>
+      nnoremap <Plug>(asyncwalker-insert) <cmd>call denops#request('${denops.name}', 'asyncwalkerInsert', [])<cr>
 
-      inoremap <plug>(asyncwalker-escape) <cmd>call denops#request('${denops.name}', 'asyncwalkerEscape', [])<cr>
-      nnoremap <plug>(asyncwalker-escape) <cmd>call denops#request('${denops.name}', 'asyncwalkerEscape', [])<cr>
+      inoremap <Plug>(asyncwalker-escape) <cmd>call denops#request('${denops.name}', 'asyncwalkerEscape', [])<cr>
+      nnoremap <Plug>(asyncwalker-escape) <cmd>call denops#request('${denops.name}', 'asyncwalkerEscape', [])<cr>
 
-      inoremap <plug>(asyncwalker-cursor-up) <cmd>call denops#request('${denops.name}', 'asyncwalkerCursor', [v:false])<cr>
-      inoremap <plug>(asyncwalker-cursor-down) <cmd>call denops#request('${denops.name}', 'asyncwalkerCursor', [v:true])<cr>
-
-      command! -nargs=* AsyncWalk call denops#notify('${denops.name}', 'run', [<f-args>])
-      command! -nargs=* AsyncWalkBufferDir call denops#notify('${denops.name}', 'runBufferDir', [<f-args>])
-      command! AsyncWalkResume call denops#notify('${denops.name}', 'resume', [])
+      inoremap <Plug>(asyncwalker-cursor-up) <cmd>call denops#request('${denops.name}', 'asyncwalkerCursor', [v:false])<cr>
+      inoremap <Plug>(asyncwalker-cursor-down) <cmd>call denops#request('${denops.name}', 'asyncwalkerCursor', [v:true])<cr>
     `,
   );
   await autocmd.group(denops, "asyncwalker-map", (helper) => {
