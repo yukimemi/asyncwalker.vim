@@ -14,7 +14,7 @@ import type { Denops } from "jsr:@denops/std@7.3.2";
 import { batch } from "jsr:@denops/std@7.3.2/batch";
 import { difference } from "jsr:@es-toolkit/es-toolkit@1.27.0";
 import { echo, echoerr, execute, input } from "jsr:@denops/std@7.3.2/helper";
-import { parseArgs } from "jsr:@std/cli@1.0.6";
+import { parseArgs } from "jsr:@std/cli@1.0.7";
 import { z } from "npm:zod@3.23.8";
 
 let entries: string[] = [];
