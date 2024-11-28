@@ -4,16 +4,16 @@
 // Last Change : 2024/10/27 16:12:35.
 // =============================================================================
 
-import * as autocmd from "jsr:@denops/std@7.3.2/autocmd";
-import * as buffer from "jsr:@denops/std@7.3.2/buffer";
-import * as fn from "jsr:@denops/std@7.3.2/function";
+import * as autocmd from "jsr:@denops/std@7.4.0/autocmd";
+import * as buffer from "jsr:@denops/std@7.4.0/buffer";
+import * as fn from "jsr:@denops/std@7.4.0/function";
 import * as fs from "jsr:@std/fs@1.0.6";
 import * as path from "jsr:@std/path@1.0.8";
-import * as vars from "jsr:@denops/std@7.3.2/variable";
-import type { Denops } from "jsr:@denops/std@7.3.2";
-import { batch } from "jsr:@denops/std@7.3.2/batch";
+import * as vars from "jsr:@denops/std@7.4.0/variable";
+import type { Denops } from "jsr:@denops/std@7.4.0";
+import { batch } from "jsr:@denops/std@7.4.0/batch";
 import { difference } from "jsr:@es-toolkit/es-toolkit@1.27.0";
-import { echo, echoerr, execute, input } from "jsr:@denops/std@7.3.2/helper";
+import { echo, echoerr, execute, input } from "jsr:@denops/std@7.4.0/helper";
 import { parseArgs } from "jsr:@std/cli@1.0.7";
 import { z } from "npm:zod@3.23.8";
 
