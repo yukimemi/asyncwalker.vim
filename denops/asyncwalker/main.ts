@@ -7,7 +7,7 @@
 import * as autocmd from "jsr:@denops/std@7.5.0/autocmd";
 import * as buffer from "jsr:@denops/std@7.5.0/buffer";
 import * as fn from "jsr:@denops/std@7.5.0/function";
-import * as fs from "jsr:@std/fs@1.0.13";
+import * as fs from "jsr:@std/fs@1.0.14";
 import * as path from "jsr:@std/path@1.0.8";
 import * as vars from "jsr:@denops/std@7.5.0/variable";
 import type { Denops } from "jsr:@denops/std@7.5.0";
