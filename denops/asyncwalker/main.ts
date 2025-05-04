@@ -12,7 +12,7 @@ import * as path from "jsr:@std/path@1.0.9";
 import * as vars from "jsr:@denops/std@7.5.0/variable";
 import type { Denops } from "jsr:@denops/std@7.5.0";
 import { batch } from "jsr:@denops/std@7.5.0/batch";
-import { difference } from "jsr:@es-toolkit/es-toolkit@1.36.0";
+import { difference } from "jsr:@es-toolkit/es-toolkit@1.37.2";
 import { echo, echoerr, execute, input } from "jsr:@denops/std@7.5.0/helper";
 import { parseArgs } from "jsr:@std/cli@1.0.17";
 import { z } from "npm:zod@3.24.3";
