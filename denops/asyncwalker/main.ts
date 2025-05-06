@@ -1,7 +1,7 @@
 // =============================================================================
 // File        : main.ts
 // Author      : yukimemi
-// Last Change : 2024/10/27 16:12:35.
+// Last Change : 2024/11/02 21:57:45.
 // =============================================================================
 
 import * as autocmd from "jsr:@denops/std@7.5.0/autocmd";
@@ -285,7 +285,7 @@ export async function main(denops: Denops): Promise<void> {
       clog({ args });
 
       const bufname = await fn.bufname(denops);
-      const bufdir = await fn.fnamemodify(denops, bufname, ":h");
+      const bufdir = await fn.fnamemodify(denops, bufname, ":p:h");
       clog({ bufdir });
 
       args.push(`--path=${bufdir}`);
