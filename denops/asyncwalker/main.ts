@@ -12,10 +12,10 @@ import * as path from "jsr:@std/path@1.1.0";
 import * as vars from "jsr:@denops/std@7.5.0/variable";
 import type { Denops } from "jsr:@denops/std@7.5.0";
 import { batch } from "jsr:@denops/std@7.5.0/batch";
-import { difference } from "jsr:@es-toolkit/es-toolkit@1.38.0";
+import { difference } from "jsr:@es-toolkit/es-toolkit@1.39.0";
 import { echo, echoerr, execute, input } from "jsr:@denops/std@7.5.0/helper";
 import { parseArgs } from "jsr:@std/cli@1.0.19";
-import { z } from "npm:zod@3.25.51";
+import { z } from "npm:zod@3.25.53";
 
 let entries: string[] = [];
 let filterEntries: string[] = [];
