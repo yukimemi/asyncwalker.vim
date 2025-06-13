@@ -15,7 +15,7 @@ import { batch } from "jsr:@denops/std@7.5.1/batch";
 import { difference } from "jsr:@es-toolkit/es-toolkit@1.39.3";
 import { echo, echoerr, execute, input } from "jsr:@denops/std@7.5.1/helper";
 import { parseArgs } from "jsr:@std/cli@1.0.20";
-import { z } from "npm:zod@3.25.62";
+import { z } from "npm:zod@3.25.63";
 
 let entries: string[] = [];
 let filterEntries: string[] = [];
