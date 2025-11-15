@@ -1,21 +1,21 @@
 // =============================================================================
 // File        : main.ts
 // Author      : yukimemi
-// Last Change : 2024/11/02 21:57:45.
+// Last Change : 2025/11/15 23:19:05.
 // =============================================================================
 
-import * as autocmd from "jsr:@denops/std@8.1.1/autocmd";
-import * as buffer from "jsr:@denops/std@8.1.1/buffer";
-import * as fn from "jsr:@denops/std@8.1.1/function";
-import * as fs from "jsr:@std/fs@1.0.19";
-import * as path from "jsr:@std/path@1.1.2";
-import * as vars from "jsr:@denops/std@8.1.1/variable";
-import type { Denops } from "jsr:@denops/std@8.1.1";
-import { batch } from "jsr:@denops/std@8.1.1/batch";
-import { difference } from "jsr:@es-toolkit/es-toolkit@1.41.0";
-import { echo, echoerr, execute, input } from "jsr:@denops/std@8.1.1/helper";
-import { parseArgs } from "jsr:@std/cli@1.0.23";
-import { z } from "npm:zod@4.1.12";
+import * as autocmd from "@denops/std/autocmd";
+import * as buffer from "@denops/std/buffer";
+import * as fn from "@denops/std/function";
+import * as fs from "@std/fs";
+import * as path from "@std/path";
+import * as vars from "@denops/std/variable";
+import type { Denops } from "@denops/std";
+import { batch } from "@denops/std/batch";
+import { difference } from "@es-toolkit/es-toolkit";
+import { echo, echoerr, execute, input } from "@denops/std/helper";
+import { parseArgs } from "@std/cli";
+import { z } from "zod";
 
 let entries: string[] = [];
 let filterEntries: string[] = [];
