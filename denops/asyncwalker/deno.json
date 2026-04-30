@@ -1,11 +1,11 @@
 {
   "imports": {
     "@denops/std": "jsr:@denops/std@^8.2.0",
-    "@es-toolkit/es-toolkit": "jsr:@es-toolkit/es-toolkit@^1.46.0",
+    "@es-toolkit/es-toolkit": "jsr:@es-toolkit/es-toolkit@^1.46.1",
     "@std/assert": "jsr:@std/assert@^1.0.19",
     "@std/cli": "jsr:@std/cli@^1.0.29",
     "@std/fs": "jsr:@std/fs@^1.0.23",
     "@std/path": "jsr:@std/path@^1.1.4",
-    "zod": "npm:zod@^4.3.6"
+    "zod": "npm:zod@^4.4.1"
   }
 }
