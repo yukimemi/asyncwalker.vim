@@ -1,5 +1,5 @@
 preset = "C:/Users/yukimemi/src/github.com/yukimemi/pj-presets/denops.toml"
-applied_at = "2026-08-15T06:00:00.1250082Z"
+applied_at = "2026-08-15T06:21:58.3994857Z"
 
 [[templates]]
 source = "github.com/yukimemi/pj-base"
@@ -8,7 +8,7 @@ version = "0.14.0"
 
 [[templates]]
 source = "github.com/yukimemi/pj-denops"
-rev = "2b3aabe87f3c7646cfc7503020b3a2a610b8540c"
+rev = "8a4bc6b49d89e9e73f50851dec133a634a3bd905"
 version = "0.1.0"
 
 [files.".agents/skills/renri/SKILL.md"]
@@ -30,7 +30,7 @@ content_hash = "d7331ae3c991ee893b97dd182ffeabfc5314798a6c9a8595a4c874b1f9b52ad9
 once_applied = true
 
 [files.".github/workflows/ci.yml"]
-content_hash = "235d22c4ca0d757df073d13ac7757d48be2d81a8614574e8d515130f12fd11a1"
+content_hash = "a3969a639b08cd585457df7087c5fc6db22b64d919fa807cae3d775d3f17de1d"
 
 [files.".github/workflows/claude-review.yml"]
 content_hash = "8d0de0b2e577bd089d18475915f4cd41f2e7af4054b4888a8ddaac58946ee4e8"
@@ -45,6 +45,7 @@ content_hash = "2256d160721583ff5b6afe5c9a1778761f7ce6fc5ba46dbe27c9cd7d803a0632
 content_hash = "4bebd1c3417c33f9d1c51f011694f6d82b098bbb1a5a102ba56e97ab01a866ef"
 
 [files.".kata/vars.toml"]
+content_hash = "393b2b94540e792790ef9357e46e5bc259eb3064605794ca2373ae458999cb23"
 once_applied = true
 
 [files."AGENTS.md"]
