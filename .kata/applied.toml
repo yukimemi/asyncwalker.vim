@@ -1,4 +1,4 @@
-preset = "C:/Users/yukimemi/src/github.com/yukimemi/pj-presets/denops.toml"
+preset = "github.com/yukimemi/pj-presets:denops"
 applied_at = "2026-08-15T06:44:06.0519868Z"
 
 [[templates]]
